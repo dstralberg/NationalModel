@@ -120,7 +120,7 @@ for (j in 1:length(speclist)) {
   dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
   dat2$SPECIES <- as.character(speclist[j])
   dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
-  s2011 <- left_join(dat1,specoff, by=c("SPECIES","PKEY"))
+  s2011 <- left_join(dat2,specoff, by=c("SPECIES","PKEY"))
   d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
   d2011 <- na.omit(d2011) #eliminate non-Quebec data 
 
@@ -174,49 +174,3 @@ for (j in 1:length(speclist)) {
   gc()
   }
 }
-
-#rerun models that may not be optimal with faster learning rate
-for (j in 1:length(speclist)) {
-  load(paste(w,speclist[j],"brtQC3.R",sep=""))
-  if (brt1$n.trees == 10000) {
-    specoff <- filter(offlc, SPECIES==as.character(speclist[j]))
-    specoff <- distinct(specoff) 
-    
-    specdat2001 <- filter(QCPC2001, SPECIES == as.character(speclist[j]))
-    specdat2001x <- aggregate(specdat2001$ABUND,by=list("PKEY"=specdat2001$PKEY,"SS"=specdat2001$SS), FUN=sum)
-    names(specdat2001x)[3] <- "ABUND"
-    dat1 <- right_join(specdat2001x,survey2001[,1:3],by=c("SS","PKEY")) 
-    dat1$SPECIES <- as.character(speclist[j])
-    dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND)) 
-    s2001 <- left_join(dat1,specoff, by=c("SPECIES","PKEY"))
-    d2001 <- left_join(s2001, dat_2001, by=c("SS")) 
-    
-    specdat2011 <- filter(PC2011, SPECIES == as.character(speclist[j])) 
-    specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS), FUN=sum)
-    names(specdat2011x)[3] <- "ABUND"  
-    dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
-    dat2$SPECIES <- as.character(speclist[j])
-    dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
-    s2011 <- left_join(dat1,specoff, by=c("SPECIES","PKEY"))
-    d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
-    d2011 <- na.omit(d2011) #eliminate non-Quebec data 
-    
-    datcombo <- rbind(d2001,d2011)
-    datcombo <- na.omit(datcombo)
-    datcombo$wat <- as.factor(datcombo$wat)
-    datcombo$urbag <- as.factor(datcombo$urbag)
-    datcombo$landform <- as.factor(datcombo$landform)
-    
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(15,21,23,29,30,36,37,45,53,54,55,59,63,65,67,70,77,81,84,97,98,103,104,105,106,107), family = "poisson", tree.complexity = 3, learning.rate = 0.01, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
-    save(brt1,file=paste(w,speclist[j],"brtQC3.R",sep=""))
-    brtplot(j)
-}
-gc()
-
-}
-
-
-for (j in 1:length(speclist)) {
-  brtplot(j)
-}
-
