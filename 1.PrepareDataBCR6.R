@@ -8,9 +8,6 @@ LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +dat
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
 
-# offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
-# offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
-
 load("F:/BAM/BAMData/data_package_2016-04-18.Rdata")	
 load("F:/BAM/BAMData/offsets-v3_2016-04-18.Rdata")
 coordinates(SS) <- c("X", "Y") 
@@ -56,13 +53,31 @@ offBU <- data.table(melt(off))
 names(offBU) <- c("PKEY","SPECIES","logoffset")
 offBU$SPECIES <- as.character(offBU$SPECIES)
 offBU$PKEY <- as.character(offBU$PKEY)
+#write.csv(offBU,file="G:/Boreal/NationalModelsV2/BCR6/offbu.csv", row.names=FALSE)
+
+load("F:/BAM/BamData/ARU/nwt-offsets-2019-02-01.RData")
+SSBU2 <- unique(dd[,c(14,20:21)])
+coordinates(SSBU2) <- c("X", "Y") 
+proj4string(SSBU2) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+SSBU2LC <- as.data.frame(spTransform(SSBU2, LCC))
+SSBULC <- rbind(SSBULC,SSBU2LC)
+PKEYBU2 <- unique(dd[,c(14,15,17)])
+PKEYBU <- rbind(PKEYBU,PKEYBU2)
+PCBU2 <- melt(y)
+names(PCBU2) <- c("PKEY","SPECIES","ABUND")
+PCBU <- rbind(PCBU,PCBU2)
+offBU2 <- data.table(melt(off))
+names(offBU2) <- c("PKEY","SPECIES","logoffset")
+offBU2$SPECIES <- as.character(offBU2$SPECIES)
+offBU2$PKEY <- as.character(offBU2$PKEY)
+offBU <- rbind(offBU,offBU2)
 write.csv(offBU,file="G:/Boreal/NationalModelsV2/BCR6/offbu.csv", row.names=FALSE)
 
 SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBULC)
 # SSARU <- rbind(SSWT,SSBU)
 # write.csv(SSARU,file=paste(w,"SSARU.csv",sep=""),row.names=FALSE)
-SSBCR6 <- cbind(SScombo, extract(bcr6, as.matrix(cbind(SScombo$X,SScombo$Y)))) #n=311518
-SSBCR6 <- na.omit(SSBCR6) #n=49043
+SSBCR6 <- cbind(SScombo, extract(bcr6, as.matrix(cbind(SScombo$X,SScombo$Y)))) #n=312906
+SSBCR6 <- na.omit(SSBCR6) #n=52362
 SSBCR6 <- SSBCR6[,1:3]
 PKEYcombo <- rbind(PKEYBAM[,c(1,2,8)],PKEYAtlas[,c(1,2,4)],PKEYWT,PKEYBU)
 PCcombo <- rbind(PCBAM[,c(3:5)], PCAtlas[,c(2,4:5)], PCWT, PCBU) 
@@ -78,6 +93,8 @@ wat <- raster("G:/Boreal/NationalModelsV2/wat2011_lcc1.tif")
 wat6 <- crop(wat,bcr6)
 wat6 <- mask(wat6,bcr6)
 led25 <- focal(wat6, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)
+vrug <- raster("G:/Boreal/NationalModelsV2/BCR6/vrug_bcr6.tif")
+wet <- raster("G:/Boreal/NationalModelsV2/BCR6/HWL_BCR6.tif")
 
 lf <- raster("D:/NorthAmerica/topo/lf_lcc1.tif")
 lf6 <- crop(lf,bcr6)
@@ -89,25 +106,28 @@ for (i in 2:length(b2011)) {bs2011 <- addLayer(bs2011, raster(b2011[i]))}
 names(bs2011) <- gsub("NFI_MODIS250m_2011_kNN_","",names(bs2011))
 bs2011bcr6 <- crop(bs2011,bcr6)
 bs2011bcr6 <- mask(bs2011bcr6,bcr6)
-bs2011bcr6 <- dropLayer(bs2011bcr6, c(1,2,3,4,5,7,8,9,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
+bs2011bcr6 <- dropLayer(bs2011bcr6, c(1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
 
-# bs2011bcr6_1km <- aggregate(bs2011bcr6, fact=4, fun=mean)
-# wat1km <- resample(wat6, bs2011bcr6_1km, method='ngb')
-# bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, wat1km)
-# names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "wat"
-# led251km <- resample(led25, bs2011bcr6_1km, method='bilinear')
-# bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, led251km)
-# names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "led25"
-# urbag1km <- resample(ua6, bs2011bcr6_1km, method='ngb')
-# bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, urbag1km)
-# names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "urbag"
-# dev251km <- resample(dev25, bs2011bcr6_1km, method='bilinear')
-# bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, dev251km)
-# names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "dev25"
-# lf_1km <- resample(lf6, bs2011bcr6_1km, method='ngb')
-# bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, lf_1km)
-# names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "landform"
-# writeRaster(bs2011bcr6_1km,file=paste(w,"bcr6_2011rasters",sep=""),overwrite=TRUE)
+bs2011bcr6_1km <- aggregate(bs2011bcr6, fact=4, fun=mean)
+wat1km <- resample(wat6, bs2011bcr6_1km, method='ngb')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, wat1km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "wat"
+led251km <- resample(led25, bs2011bcr6_1km, method='bilinear')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, led251km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "led25"
+urbag1km <- resample(ua6, bs2011bcr6_1km, method='ngb')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, urbag1km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "urbag"
+dev251km <- resample(dev25, bs2011bcr6_1km, method='bilinear')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, dev251km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "dev25"
+vrug1km <- resample(vrug, bs2011bcr6_1km, method='bilinear')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km,vrug1km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "vrug"
+lf_1km <- resample(lf6, bs2011bcr6_1km, method='ngb')
+bs2011bcr6_1km <- addLayer(bs2011bcr6_1km, lf_1km)
+names(bs2011bcr6_1km)[nlayers(bs2011bcr6_1km)] <- "landform"
+writeRaster(bs2011bcr6_1km,file=paste(w,"bcr6_2011rasters_1km",sep=""),overwrite=TRUE)
 
 bs2011bcr6 <- addLayer(bs2011bcr6,wat6)
 names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "wat"
@@ -117,11 +137,15 @@ bs2011bcr6 <- addLayer(bs2011bcr6,ua6)
 names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "urbag"
 bs2011bcr6 <- addLayer(bs2011bcr6,dev25)
 names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "dev25"
+bs2011bcr6 <- addLayer(bs2011bcr6,vrug)
+names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "vrug"
+wet250 <- resample(wet, bs2011bcr6, method='ngb')
+bs2011bcr6 <- addLayer(bs2011bcr6, wet250)
+names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "wet"
 lf250 <- resample(lf6, bs2011bcr6, method='ngb')
 bs2011bcr6 <- addLayer(bs2011bcr6, lf250)
 names(bs2011bcr6)[nlayers(bs2011bcr6)] <- "landform"
-writeRaster(bs2011bcr6,file=paste(w,"bcr6_2011rasters250",sep=""),overwrite=TRUE)
-#bs2011bcr6<-stack(paste(w,"bcr6_2011rasters250",sep=""))
+writeRaster(bs2011bcr6,file=paste(w,"bcr6_2011rasters_250",sep=""),overwrite=TRUE)
 
 b2001 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
 setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
@@ -130,25 +154,7 @@ for (i in 2:length(b2001)) {bs2001 <- addLayer(bs2001, raster(b2001[i]))}
 names(bs2001) <- gsub("NFI_MODIS250m_2001_kNN_","",names(bs2001))
 bs2001bcr6 <- crop(bs2001,bcr6)
 bs2001bcr6 <- mask(bs2001bcr6,bcr6)
-bs2001bcr6 <- dropLayer(bs2001bcr6, c(1,2,3,4,5,7,8,9,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
-
-# bs2001bcr6_1km <- aggregate(bs2001bcr6, fact=4, fun=mean)
-# wat1km <- resample(wat6, bs2001bcr6_1km, method='ngb')
-# bs2001bcr6_1km <- addLayer(bs2001bcr6_1km, wat1km)
-# names(bs2001bcr6_1km)[nlayers(bs2001bcr6_1km)] <- "wat"
-# led251km <- resample(led25, bs2001bcr6_1km, method='bilinear')
-# bs2001bcr6_1km <- addLayer(bs2001bcr6_1km, led251km)
-# names(bs2001bcr6_1km)[nlayers(bs2001bcr6_1km)] <- "led25"
-# urbag1km <- resample(ua6, bs2001bcr6_1km, method='ngb')
-# bs2001bcr6_1km <- addLayer(bs2001bcr6_1km, urbag1km)
-# names(bs2001bcr6_1km)[nlayers(bs2001bcr6_1km)] <- "urbag"
-# dev251km <- resample(dev25, bs2001bcr6_1km, method='bilinear')
-# bs2001bcr6_1km <- addLayer(bs2001bcr6_1km, dev251km)
-# names(bs2001bcr6_1km)[nlayers(bs2001bcr6_1km)] <- "dev25"
-# lf_1km <- resample(lf6, bs2001bcr6_1km, method='ngb')
-# bs2001bcr6_1km <- addLayer(bs2001bcr6_1km, lf_1km)
-# names(bs2001bcr6_1km)[nlayers(bs2001bcr6_1km)] <- "landform"
-# writeRaster(bs2001bcr6_1km,file=paste(w,"bcr6_2001rasters",sep=""),overwrite=TRUE)
+bs2001bcr6 <- dropLayer(bs2001bcr6, c(1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
 
 bs2001bcr6 <- addLayer(bs2001bcr6,wat6)
 names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "wat"
@@ -158,13 +164,17 @@ bs2001bcr6 <- addLayer(bs2001bcr6,ua6)
 names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "urbag"
 bs2001bcr6 <- addLayer(bs2001bcr6,dev25)
 names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "dev25"
-lf250 <- resample(lf6, bs2001bcr6, method='ngb')
+bs2001bcr6 <- addLayer(bs2001bcr6,vrug)
+names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "vrug"
+#wet250 <- resample(wet, bs2001bcr6, method='ngb')
+bs2001bcr6 <- addLayer(bs2001bcr6, wet250)
+names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "wet"
+#lf250 <- resample(lf6, bs2001bcr6, method='ngb')
 bs2001bcr6 <- addLayer(bs2001bcr6, lf250)
 names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "landform"
-writeRaster(bs2001bcr6,file=paste(w,"bcr6_2001rasters250",sep=""),overwrite=TRUE)
-#bs2001bcr6<-stack(paste(w,"bcr6_2001rasters250",sep=""))
+writeRaster(bs2001bcr6,file=paste(w,"bcr6_2001rasters_250",sep=""),overwrite=TRUE)
 
-bs2011bcr6 <- dropLayer(bs2011bcr6,18)
+bs2011bcr6 <- dropLayer(bs2011bcr6,19)
 dat2011 <- cbind(SSBCR6, extract(bs2011bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
 dat2011 <-cbind(dat2011,extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
 names(dat2011)[ncol(dat2011)] <- "LCC"
@@ -176,7 +186,7 @@ dat_2011 <- inner_join(dat2011, PKEYcombo[,2:3], by=c("SS")) #n=150051
 dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:22]) #n=32130
 write.csv(dat_2011,paste(w,"bcr6_dat2011.csv",sep=""),row.names=FALSE)
 
-bs2001bcr6 <- dropLayer(bs2001bcr6,18)
+bs2001bcr6 <- dropLayer(bs2001bcr6,19)
 dat2001 <- cbind(SSBCR6, extract(bs2001bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
 dat2001 <-cbind(dat2001,extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y)))) 
 names(dat2001)[ncol(dat2001)] <- "LCC"

@@ -14,9 +14,9 @@ speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$Alberta==1,]
 speclist <- speclist[,1]
 
-bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
-bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
-bs2011_1km <- stack(paste(w,"bcr6_2011rasters.grd",sep=""))
+bs2001 <- stack(paste(w,"bcr6_2001rasters_250.grd",sep=""))
+bs2011 <- stack(paste(w,"bcr6_2011rasters_250.grd",sep=""))
+bs2011_1km <- stack(paste(w,"bcr6_2011rasters_1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
@@ -25,14 +25,13 @@ offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
 offlc <- rbind(offl[2:4],offla[2:4])
 offlc$PKEY <- as.character(offlc$PKEY)
 offlc$SPECIES <- as.character(offlc$SPECIES)
-rm(offla,offl)
 offlb <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offwt.csv")
 offlb$PKEY <- as.character(offlb$PKEY)
 offlb$SPECIES <- as.character(offlb$SPECIES)
 offld <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offbu.csv")
 offld$PKEY <- as.character(offld$PKEY)
 offld$SPECIES <- as.character(offld$SPECIES)
-offcombo <- rbind(offlc,offlb[,2:4],offld[,2:4])
+offcombo <- rbind(offlc,offlb,offld)
 
 dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001.csv") #n=18946
 dat2001$SS <- as.character(dat2001$SS)
