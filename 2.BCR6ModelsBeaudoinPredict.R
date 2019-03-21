@@ -11,12 +11,13 @@ w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
-speclist <- speclist[speclist$Alberta==1,]
+speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
 speclist <- speclist[,1]
+#speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
-bs2001 <- stack(paste(w,"bcr6_2001rasters_250.grd",sep=""))
-bs2011 <- stack(paste(w,"bcr6_2011rasters_250.grd",sep=""))
-bs2011_1km <- stack(paste(w,"bcr6_2011rasters_1km.grd",sep=""))
+bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
+bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
+bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
@@ -33,18 +34,18 @@ offld$PKEY <- as.character(offld$PKEY)
 offld$SPECIES <- as.character(offld$SPECIES)
 offcombo <- rbind(offlc,offlb,offld)
 
-dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001.csv") #n=18946
+dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v2.csv") #n=18946
 dat2001$SS <- as.character(dat2001$SS)
 dat_2001 <- dat2001[!duplicated(dat2001[, 2:3]), ] #n=18343
 dat_2001$count <- 1
 
-dat2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011.csv") #n=33859
+dat2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_V2.csv") #n=33859
 dat2011$SS <- as.character(dat2011$SS)
 dat_2011 <- dat2011[!duplicated(dat2011[, 2:3]), ] #n=30835
 dat_2011$count <- 1
 
-PC2011 <- read.csv(paste(w,"BCR6PC2011.csv",sep=""))
-PC2001 <- read.csv(paste(w,"BCR6PC2001.csv",sep=""))
+PC2011 <- read.csv(paste(w,"BCR6PC2011_v2.csv",sep=""))
+PC2001 <- read.csv(paste(w,"BCR6PC2001_v2.csv",sep=""))
 
 survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS), FUN=sum) 
 survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
@@ -71,21 +72,21 @@ setwd(w)
 
 #generate predictions and plots from models
 brtplot <- function (j) {
-  load(paste(w,speclist[j],"brt1.R",sep=""))
+  load(paste(w,speclist[j],"brt2.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
-  write.csv(varimp,file=paste(w,speclist[j],"varimp3.csv",sep=""))
+  write.csv(varimp,file=paste(w,speclist[j],"varimp2.csv",sep=""))
   cvstats <- t(as.data.frame(brt1$cv.statistics))
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats3.csv",sep=""))
-  pdf(paste(w,speclist[j],"_plot1.pdf",sep=""))
+  write.csv(cvstats,file=paste(w,speclist[j],"cvstats2.csv",sep=""))
+  pdf(paste(w,speclist[j],"_plot2.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(bs2011_1km, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km3",sep=""), format="GTiff",overwrite=TRUE)
+  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km2",sep=""), format="GTiff",overwrite=TRUE)
   
-  q99 <- quantile(rast, probs=c(0.99))	
+  #q99 <- quantile(rast, probs=c(0.99))	
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km1.png",sep=""), height=600, width=850)
+  png(file=paste(w,speclist[j],"_pred1km2.png",sep=""), height=600, width=850)
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -95,7 +96,23 @@ brtplot <- function (j) {
   dev.off()
 }
 
+cvstatsum <- function (speclist) {
+  cvstats <- read.csv(paste(w,speclist[1],"cvstats2.csv",sep=""))
+  cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
+  names(cvstatmean) <- c("stat",as.character(speclist[1]))
+  for (j in 2:length(speclist)) {
+    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats2.csv",sep="")))
+    if(class(x) != "try-error") {
+      cvstatmean <- as.data.frame(cbind(cvstatmean,rowMeans(cv2[,2:6])))
+      names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
+    }
+  }
+  return(cvstatmean)
+}
+
 for (j in 1:length(speclist)) {
+  x<-try(rast <- raster(paste(w,speclist[j],"_pred1km2.tif",sep="")))
+  if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
@@ -125,24 +142,35 @@ for (j in 1:length(speclist)) {
   datcombo$urbag <- as.factor(datcombo$urbag)
   datcombo$landform <- as.factor(datcombo$landform)
 
-  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9:25,27), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9,11:18,21:25,28), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w,speclist[j],"brt1.R",sep=""))
+    save(brt1,file=paste(w,speclist[j],"brt2.R",sep=""))
     brtplot(j)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9:25,27), family = "poisson", tree.complexity = 3, learning.rate = 0.0001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9,11:18,21:25,28), family = "poisson", tree.complexity = 3, learning.rate = 0.0001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,speclist[j],"brt1.R",sep=""))
+      save(brt1,file=paste(w,speclist[j],"brt2.R",sep=""))
       brtplot(j)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9:25,27), family = "poisson", tree.complexity = 3, learning.rate = 0.00001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9,11:18,21:25,28), family = "poisson", tree.complexity = 3, learning.rate = 0.00001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
-        save(brt1,file=paste(w,speclist[j],"brt1.R",sep=""))
+        save(brt1,file=paste(w,speclist[j],"brt2.R",sep=""))
         brtplot(j)
       }  
     }
   gc()
   }
+  }
 }
+
+for (j in 1:length(speclist)) {
+  x1 <- try(load(paste(w,speclist[j],"brt2.R",sep="")))
+  if (class(x1) != "try-error") {
+  brtplot(j)
+  }
+}
+
+cvstats <- cvstatsum(speclist)
+write.csv(cvstats,file=paste(w,"_cvstats2.csv",sep=""))
