@@ -137,3 +137,18 @@ for (i in 1:length(bcrs)){
   writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"cat_1km",sep=""),overwrite=TRUE)
 }
 
+setwd(w)
+#write climate rasters
+for (i in 1:length(bcrs)){
+  bcr <- shapefile(bcrs[i])
+  biomass1 <- mask(crop(biomass,bcr),bcr)
+  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
+  bcrr <- rasterize(bcr,curclim[[1]])
+  bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
+  bs <- stack(bcrc)
+  names(bs) <- "bcr"
+  for (j in 1:nlayers(clim1)) {
+    bs <- addLayer(bs, clim1[[j]])
+  }
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"clim_1km",sep=""),overwrite=TRUE)
+}
