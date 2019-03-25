@@ -63,10 +63,5 @@ for (i in 1:length(bcrs)){
   gc()
 }
 
-for (j in 1:length(speclist)) {
-  x1 <- try(load(paste(w,speclist[j],"brt3.R",sep="")))
-  if (class(x1) != "try-error") {
-  brtplot(j,bs,bcrname,landcov)
-  }
-}
+
 

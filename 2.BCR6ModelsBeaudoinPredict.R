@@ -107,8 +107,7 @@ cvstatsum <- function (speclist) {
       names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
     }
   }
-  x <- melt(cvstatmean,id=1:ncol(cvstatmean))
-  return(x)
+  return(cvstatmean)
 }
 
 for (j in 1:length(speclist)) {
