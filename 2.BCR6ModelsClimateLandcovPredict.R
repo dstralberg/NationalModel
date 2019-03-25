@@ -70,5 +70,3 @@ for (j in 1:length(speclist)) {
   }
 }
 
-cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w,"_cvstats3.csv",sep=""))
