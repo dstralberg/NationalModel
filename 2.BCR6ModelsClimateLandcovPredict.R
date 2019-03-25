@@ -46,19 +46,6 @@ brtplot <- function (j,bs,bcrname,landcov) {
   
 }
 
-cvstatsum <- function (speclist) {
-  cvstats <- read.csv(paste(w,speclist[1],"cvstats3.csv",sep=""))
-  cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
-  names(cvstatmean) <- c("stat",as.character(speclist[1]))
-  for (j in 2:length(speclist)) {
-    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats3.csv",sep="")))
-    if(class(x) != "try-error") {
-      cvstatmean <- as.data.frame(cbind(cvstatmean,rowMeans(cv2[,2:6])))
-      names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
-    }
-  }
-  return(cvstatmean)
-}
 
 bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr6_100km.shp","bcr7_100km.shp","bcr8_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
 for (i in 1:length(bcrs)){
