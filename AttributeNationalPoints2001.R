@@ -68,6 +68,15 @@ setwd(cur)
 clim <- list.files(cur, pattern =".asc$")
 curclim<-stack(clim)
 ss <- cbind(ss,extract(curclim,st_coordinates(ss)))
+
+
+#Roads buffered by 100-m
+road <- raster(paste(w,"roadonoff1.tif",sep=""))
+mr <- c(1, 2500000, 1,  NA, NA, 0)
+rcroad <- matrix(mr, ncol=3, byrow=TRUE)
+rrc <- reclassify(road,rcroad)
+ss <- cbind(ss,"ROAD"=extract(rrc,st_coordinates(ss)))
+
 write.csv(ss,file=paste(w,"ss_2001attributes.csv",sep=""))
 save(ss,file=paste(w,"ss_2001attributes.RData",sep=""))
 
