@@ -13,7 +13,8 @@ library(raster)
 w <-"G:/Boreal/NationalModelsV2/"
 load(paste(w,"BAMdb-GNMsubset-2019-03-01.RData",sep=""))
 
-bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr6_100km.shp","bcr7_100km.shp","bcr8_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
+bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
+bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.shp","bcr80_100km.shp","bcr82_100km.shp","bcr83_100km.shp")
 
 #Adaptwest baseline climate variables
 cur <- "E:/CMIP5/baseline19812010/"
@@ -23,10 +24,12 @@ curclim<-stack(clim)
 
 # canroad <- shapefile(paste(w,"canroadlcc.shp",sep=""))
 # roadlen <- raster(paste(w,"roadlen.asc",sep=""))
-road <- raster(paste(w,"roadonoff1.tif",sep=""))
-mr <- c(1, 2500000, 1,  NA, NA, 0)
-rcroad <- matrix(mr, ncol=3, byrow=TRUE)
-rrc <- reclassify(road,rcroad)
+# road <- raster(paste(w,"roadonoff1.tif",sep=""))
+# mr <- c(1, 2500000, 1,  NA, NA, 0)
+# rcroad <- matrix(mr, ncol=3, byrow=TRUE)
+# rrc <- reclassify(road,rcroad)
+# writeRaster(rrc,file=paste(w,"road10",sep=""),overwrite=TRUE)
+rrc <- raster(paste(w,"road10.grd",sep=""))
 
 #MODIS-based landcover (250-m)
 # nalc2005 <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
@@ -118,7 +121,7 @@ for (i in 1:length(bcrs)){
   for (j in 1:nlayers(topo1)) {
     if (names(topo1)[j] %in% vars) {bs <- addLayer(bs, topo1[[j]])}
   }   
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"_1km",sep=""),overwrite=TRUE)
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs2[i]),"_1km",sep=""),overwrite=TRUE)
 }
 
 setwd(w)
@@ -126,7 +129,7 @@ setwd(w)
 for (i in 1:length(bcrs)){
   bcr <- shapefile(bcrs[i])
   biomass1 <- mask(crop(biomass,bcr),bcr)
-  nalc <- mask(crop(landcover[[1]],biomass1[[1]]),biomass1[[1]])
+  nalc <- mask(crop(landcover[[3]],biomass1[[1]]),biomass1[[1]])
   lf <- mask(crop(topog[[5]],biomass1[[1]]),biomass1[[1]])
   rrc1 <- crop(extend(rrc,biomass1[[1]]),biomass1[[1]])
   ROAD <- mask(rrc1,biomass1[[1]])
@@ -151,4 +154,55 @@ for (i in 1:length(bcrs)){
     bs <- addLayer(bs, clim1[[j]])
   }
   writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"clim_1km",sep=""),overwrite=TRUE)
+}
+
+
+for (i in 1:length(bcrs2)){
+  vars <- CN[[i]]
+  bcr <- shapefile(bcrs2[i])
+  biomass1 <- mask(crop(biomass,bcr),bcr)
+  landscape1 <- mask(crop(landscape,bcr),bcr)
+  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
+  landcov1 <- mask(crop(landcover,biomass1[[1]]),biomass1[[1]])
+  topo1 <- mask(crop(topog,biomass1[[1]]),biomass1[[1]])
+  bcrr <- rasterize(bcr,curclim[[1]])
+  bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
+  bs <- stack(bcrc)
+  names(bs) <- "bcr"
+  for (j in 1:nlayers(clim1)) {
+    bs <- addLayer(bs, clim1[[j]])}
+  for (j in 1:nlayers(biomass1)) {
+     bs <- addLayer(bs, biomass1[[j]])}
+  for (j in 1:nlayers(landscape1)) {
+    bs <- addLayer(bs, landscape1[[j]])}
+  for (j in 1:nlayers(landcov1)) {
+    bs <- addLayer(bs, landcov1[[j]])}
+  for (j in 1:nlayers(topo1)) {
+    bs <- addLayer(bs, topo1[[j]])}
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs2[i]),"all_1km",sep=""),overwrite=TRUE)
+}
+
+for (i in 1:length(bcrs)){
+  vars <- CN[[i]]
+  bcr <- shapefile(bcrs[i])
+  biomass1 <- mask(crop(biomass,bcr),bcr)
+  landscape1 <- mask(crop(landscape,bcr),bcr)
+  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
+  landcov1 <- mask(crop(landcover,biomass1[[1]]),biomass1[[1]])
+  topo1 <- mask(crop(topog,biomass1[[1]]),biomass1[[1]])
+  bcrr <- rasterize(bcr,curclim[[1]])
+  bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
+  bs <- stack(bcrc)
+  names(bs) <- "bcr"
+  for (j in 1:nlayers(clim1)) {
+    bs <- addLayer(bs, clim1[[j]])}
+  for (j in 1:nlayers(biomass1)) {
+    bs <- addLayer(bs, biomass1[[j]])}
+  for (j in 1:nlayers(landscape1)) {
+    bs <- addLayer(bs, landscape1[[j]])}
+  for (j in 1:nlayers(landcov1)) {
+    bs <- addLayer(bs, landcov1[[j]])}
+  for (j in 1:nlayers(topo1)) {
+    bs <- addLayer(bs, topo1[[j]])}
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"all_1km",sep=""),overwrite=TRUE)
 }
