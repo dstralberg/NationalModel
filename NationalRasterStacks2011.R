@@ -14,7 +14,7 @@ w <-"G:/Boreal/NationalModelsV2/"
 load(paste(w,"BAMdb-GNMsubset-2019-03-01.RData",sep=""))
 
 bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
-bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.shp","bcr80_100km.shp","bcr82_100km.shp","bcr83_100km.shp")
+bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.shp","bcr80_100km.shp","bcr81_100km.shp", "bcr82_100km.shp","bcr83_100km.shp")
 
 #Adaptwest baseline climate variables
 cur <- "E:/CMIP5/baseline19812010/"

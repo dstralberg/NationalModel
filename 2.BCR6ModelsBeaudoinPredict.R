@@ -52,7 +52,6 @@ survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
 survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS), FUN=sum) 
 survey2011 <- survey2011[sample(1:nrow(survey2011)), ]
 
-
 #calculating sample weights as inverse of survey effort within 5x5 pixel area
 samprast2011 <- rasterize(cbind(dat_2011$X,dat_2011$Y), r2, field=1, fun='sum')
 sampsum25 <- focal(samprast2011, w=matrix(1,nrow=5,ncol=5), na.rm=TRUE)
@@ -83,16 +82,16 @@ brtplot <- function (j) {
   rast <- raster::predict(bs2011_1km, brt1, type="response", n.trees=brt1$n.trees)
   writeRaster(rast, filename=paste(w,speclist[j],"_pred1km2",sep=""), format="GTiff",overwrite=TRUE)
   
-  #q99 <- quantile(rast, probs=c(0.99))	
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km2.png",sep=""), height=600, width=850)
-  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
+  png(file=paste(w1,speclist[j],"_pred1km2.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
-  plot(provstate, col="gray", add=TRUE)
-  text(2400000,7950000,"Potential density (males/ha)", cex=1.3)
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
   dev.off()
 }
 

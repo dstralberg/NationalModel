@@ -74,8 +74,6 @@ offBU <- rbind(offBU,offBU2)
 write.csv(offBU,file="G:/Boreal/NationalModelsV2/BCR6/offbu.csv", row.names=FALSE)
 
 SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBULC)
-# SSARU <- rbind(SSWT,SSBU)
-# write.csv(SSARU,file=paste(w,"SSARU.csv",sep=""),row.names=FALSE)
 SSBCR6 <- cbind(SScombo, extract(bcr6, as.matrix(cbind(SScombo$X,SScombo$Y)))) #n=312906
 SSBCR6 <- na.omit(SSBCR6) #n=52362
 SSBCR6 <- SSBCR6[,1:3]
@@ -97,18 +95,17 @@ rclag <- matrix(mag, ncol=3, byrow=TRUE)
 ag <- reclassify(nalc,rclag)
 x <- stack(urban,ag)
 urbag <- max(x)
-# fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
-# dev750 <- focal(urbag,w=fw750,na.rm=TRUE)
-# led750 <- focal(water,w=fw750,na.rm=TRUE)
-# landcov <- stack(nalc2005,dev750,led750)
-# names(landcov) <- c("nalc2005","dev750","led750")
 
-ua6 <- crop(urbag,bcr6)
-ua6 <- mask(ua6,bcr6)
-dev25 <- focal(ua6, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)
-wat6 <- crop(wat,bcr6)
-wat6 <- mask(wat6,bcr6)
-led25 <- focal(wat6, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)
+fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
+dev750 <- focal(urbag,w=fw750,na.rm=TRUE)
+led750 <- focal(water,w=fw750,na.rm=TRUE)
+
+# ua6 <- crop(urbag,bcr6)
+# ua6 <- mask(ua6,bcr6)
+# dev25 <- focal(ua6, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)
+# wat6 <- crop(wat,bcr6)
+# wat6 <- mask(wat6,bcr6)
+# led25 <- focal(wat6, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)
 vrug <- raster("G:/Boreal/NationalModelsV2/BCR6/vrug_bcr6.tif")
 wet <- raster("G:/Boreal/NationalModelsV2/BCR6/HWL_BCR6.tif")
 wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
@@ -116,6 +113,9 @@ wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
 lf <- raster("D:/NorthAmerica/topo/lf_lcc1.tif")
 lf6 <- crop(lf,bcr6)
 lf250 <- resample(lf6, bs2011bcr6, method='ngb')
+
+road <- raster("G:/Boreal/NationalModelsV2/BCR6/lineDensityMap_BCR6_Roads_v0.2.3_FFT_radius10000_t0.tif")
+bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
 
 # b2011 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
 # setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/")
@@ -143,8 +143,10 @@ lf250 <- resample(lf6, bs2011bcr6, method='ngb')
 # writeRaster(bs2011bcr6,file=paste(w,"bcr6_2011rasters250",sep=""),overwrite=TRUE)
 bs2011bcr6 <- stack(paste(w,"bcr6_2011rasters250",sep=""))
 
-# bs2011bcr6_1km <- aggregate(bs2011bcr6, fact=4, fun=mean)
-# writeRaster(bs2011bcr6_1km,file=paste(w,"bcr6_2011rasters1km",sep=""),overwrite=TRUE)
+# bs2011bcr6_1km <- resample(bs2011bcr6, bs, method="ngb")
+# bs2 <- stack(bs,bs2011bcr6_1km[[14:20]])
+# writeRaster(bs2,file=paste(w,"bcr6_1km",sep=""),overwrite=TRUE)
+bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 
 # b2001 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
 # setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
@@ -182,7 +184,7 @@ dat2011$SS <- as.character(dat2011$SS) #n=52362
 dat2011 <- na.omit(dat2011) #n=51966
 dat_2011 <- inner_join(dat2011, PKEYcombo[,2:3], by=c("SS")) #n=166535
 dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:23]) #n=34022
-write.csv(dat_2011,paste(w,"bcr6_dat2011_v2.csv",sep=""),row.names=FALSE)
+write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_v2.csv",row.names=FALSE)
 
 bs2001bcr6 <- dropLayer(bs2001bcr6,19)
 dat2001 <- cbind(SSBCR6, extract(bs2001bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
@@ -194,7 +196,14 @@ dat2001$SS <- as.character(dat2001$SS)
 dat2001 <- na.omit(dat2001)
 dat_2001 <- inner_join(dat2001, PKEYcombo[,2:3], by=c("SS")) 
 dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:24]) #n=18837
-write.csv(dat_2001,paste(w,"bcr6_dat2001_v2.csv",sep=""),row.names=FALSE)
+write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v2.csv",row.names=FALSE)
+
+#climate + terrain layers
+cdat <- cbind(SSBCR6, extract(bs,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
+cdat1 <- cbind(SSBCR6, extract(bs2011bcr6[[14:20]],as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
+cdat2 <- cbind(cdat,cdat1[,4:ncol(cdat1)])
+cdat3 <- inner_join(cdat2, PKEYcombo[,2:3], by=c("SS")) #n=167850
+write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v2.csv",row.names=FALSE)
 
 PC <- inner_join(PCcombo,PKEYcombo,by=c("PKEY")) 
 PCBCR6 <- inner_join(PC, SSBCR6[,1:3], by=c("SS")) 
@@ -203,5 +212,6 @@ PCBCR6$PKEY <- as.character(PCBCR6$PKEY)
 PCBCR6$SPECIES <- as.character(PCBCR6$SPECIES)
 PCBCR62001 <- PCBCR6[PCBCR6$YEAR < 2006,] 
 PCBCR62011 <- PCBCR6[PCBCR6$YEAR > 2005,] 
-write.csv(PCBCR62011,paste(w,"BCR6PC2011_v2.csv",sep=""),row.names=FALSE)
-write.csv(PCBCR62001,paste(w,"BCR6PC2001_v2.csv",sep=""),row.names=FALSE)
+write.csv(PCBCR62011,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2011_v2.csv",row.names=FALSE)
+write.csv(PCBCR62001,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2001_v2.csv",row.names=FALSE)
+write.csv(PCBCR6,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v2.csv",row.names=FALSE)

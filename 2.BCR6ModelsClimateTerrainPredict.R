@@ -40,6 +40,9 @@ provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/"
 bcr6 <- shapefile("G:/Boreal/NationalModelsV2/BCR6/bcr6.shp")
+p<- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("F:/GIS/hydrology/lakes_lcc.shp")
+lc <- crop(l,bcr6)
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
@@ -49,6 +52,7 @@ speclist <- speclist[,1]
 # bs2001 <- stack(paste(w,"BCR6/bcr6_2001rasters250.grd",sep=""))
 # bs2011 <- stack(paste(w,"BCR6/bcr6_2011rasters250.grd",sep=""))
 bs<-stack(paste(w,"bcr6clim_1km.grd",sep=""))
+bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 r2 <- bs[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
@@ -90,56 +94,87 @@ dat_c$SS <- as.character(dat_c$SS)
 w1 <- "G:/Boreal/NationalModelsV2/BCR6/"
 setwd(w1)
 
-#generate predictions and plots from models
+#generate current predictions and plots from models
 brtplot <- function (j) {
-  load(paste(w1,speclist[j],"brt4.R",sep=""))
+  load(paste(w1,speclist[j],"brt5.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
-  write.csv(varimp,file=paste(w,speclist[j],"varimp4.csv",sep=""))
+  write.csv(varimp,file=paste(w,speclist[j],"varimp5.csv",sep=""))
   cvstats <- t(as.data.frame(brt1$cv.statistics))
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats4.csv",sep=""))
-  pdf(paste(w1,speclist[j],"_plot4.pdf",sep=""))
+  write.csv(cvstats,file=paste(w,speclist[j],"cvstats5.csv",sep=""))
+  pdf(paste(w1,speclist[j],"_plot5.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(bs, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(rast, filename=paste(w1,speclist[j],"_pred1km4",sep=""), format="GTiff",overwrite=TRUE)
+  rast <- raster::predict(bs2, brt1, type="response", n.trees=brt1$n.trees)
+  writeRaster(rast, filename=paste(w1,speclist[j],"_pred1km5",sep=""), format="GTiff",overwrite=TRUE)
   
-  #q99 <- quantile(rast, probs=c(0.99))	
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w1,speclist[j],"_pred1km4.png",sep=""), height=600, width=850)
-  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
+  png(file=paste(w1,speclist[j],"_pred1km5.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
-  plot(provstate, col="gray", add=TRUE)
-  text(2400000,7950000,"Potential density (males/ha)", cex=1.3)
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
+  dev.off()
+
+  PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
+  PC1 <- PC1[PC1$ABUND>0,]
+  xy <- PC1[,c(6,7)]
+  spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
+  png(file=paste(w,speclist[j],"_pred1km5_pts.png",sep=""), width=650, height=800)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.69,0.89,0.82,0.87), axis.args=list(cex.axis=1))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  plot(spdf, col = 'red', pch=1, cex=0.4, add = TRUE)
+  text(1200000,9000000,"Potential density (males/ha)", cex=1)
   dev.off()
 }
 
-#maps with occurrence points
-brtplot2 <- function (rast,spec) {
+#generate future predictions 
+futplot <- function (j) {
+  load(paste(w1,speclist[j],"brt5.R",sep=""))
+  r2080 <- raster::predict(bs2080, brt1, type="response", n.trees=brt1$n.trees)
+  writeRaster(r2080, filename=paste(w1,speclist[j],"_pred1km5_2080",sep=""), format="GTiff",overwrite=TRUE)
+  r2050 <- raster::predict(bs2050, brt1, type="response", n.trees=brt1$n.trees)
+  writeRaster(r2050, filename=paste(w1,speclist[j],"_pred1km5_2050",sep=""), format="GTiff",overwrite=TRUE)  
+  
+  rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  PC1 <- PC[PC$SPECIES==spec,]
-  occur <- inner_join(ss,PC1,by="SS")
-  png(file=paste(x,spec,"_pred1km4.png",sep=""), width=2250, height=1800, res=216)
-  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
+  
+  png(file=paste(w1,speclist[j],"_pred1km5_2080.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
-  plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(spec),"current prediction"))
-  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(spec), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.69,0.89,0.82,0.87), axis.args=list(cex.axis=1.3))
-  plot(p, col="gray", add=TRUE)
-  plot(l, col="gray", border=NA,add=TRUE)
-  plot(st_geometry(occur), col = 'black', pch=1, cex=0.4, add = TRUE)
-  text(2200000,9400000,"Potential density (males/ha)", cex=1.3)
+  plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(r2080, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
   dev.off()
+  
+  png(file=paste(w1,speclist[j],"_pred1km5_2050.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(r2050, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
+  dev.off()  
+  
 }
 
 cvstatsum <- function (speclist) {
-  cvstats <- read.csv(paste(w1,speclist[1],"cvstats4.csv",sep=""))
+  cvstats <- read.csv(paste(w1,speclist[1],"cvstats5.csv",sep=""))
   cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
   names(cvstatmean) <- c("stat",as.character(speclist[1]))
   for (j in 2:length(speclist)) {
-    x<-try(cv2 <- read.csv(paste(w1,speclist[j],"cvstats4.csv",sep="")))
+    x<-try(cv2 <- read.csv(paste(w1,speclist[j],"cvstats5.csv",sep="")))
     if(class(x) != "try-error") {
       cvstatmean <- as.data.frame(cbind(cvstatmean,rowMeans(cv2[,2:6])))
       names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
@@ -148,8 +183,8 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 30:length(speclist)) {
-  x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km4.tif",sep="")))
+for (j in 61:length(speclist)) {
+  x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
@@ -175,25 +210,31 @@ for (j in 30:length(speclist)) {
   d2011 <- left_join(s2011, dat_c, by=c("SS"))
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo[,c(1:18,20:27,29:30,32:39)])
-  potvar <- datcombo[,10:32]
+  datcombo <- na.omit(datcombo[,c(1:18,20:27,29:30,32:46)])
+
+  potvar <- datcombo[,10:39]
   var <- get_cn(potvar)
+  
+  datcombo$wat <- as.factor(datcombo$wat)
+  datcombo$urbag <- as.factor(datcombo$urbag)
+  datcombo$landform <- as.factor(datcombo$landform)
+  datcombo$wet <- as.factor(datcombo$wet)
   
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w1,speclist[j],"brt4.R",sep=""))
+    save(brt1,file=paste(w1,speclist[j],"brt5.R",sep=""))
     brtplot(j)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
     x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.0001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w1,speclist[j],"brt4.R",sep=""))
+      save(brt1,file=paste(w1,speclist[j],"brt5.R",sep=""))
       brtplot(j)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
       x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.00001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
-        save(brt1,file=paste(w1,speclist[j],"brt4.R",sep=""))
+        save(brt1,file=paste(w1,speclist[j],"brt5.R",sep=""))
         brtplot(j)
       }  
     }
@@ -203,11 +244,11 @@ for (j in 30:length(speclist)) {
 }
 
 for (j in 1:length(speclist)) {
-  x1 <- try(load(paste(w1,speclist[j],"brt4.R",sep="")))
+  x1 <- try(load(paste(w1,speclist[j],"brt5.R",sep="")))
   if (class(x1) != "try-error") {
   brtplot(j)
   }
 }
 
 cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w1,"_cvstats4.csv",sep=""))
+write.csv(cvstats,file=paste(w1,"_cvstats5.csv",sep=""))
