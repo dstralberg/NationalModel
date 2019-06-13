@@ -46,13 +46,15 @@ lc <- crop(l,bcr6)
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
+speclist <- speclist[speclist$spp!="CORE",]
 speclist <- speclist[,1]
+
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
 # bs2001 <- stack(paste(w,"BCR6/bcr6_2001rasters250.grd",sep=""))
 # bs2011 <- stack(paste(w,"BCR6/bcr6_2011rasters250.grd",sep=""))
 bs<-stack(paste(w,"bcr6clim_1km.grd",sep=""))
-bs2 <- stack(paste(w,"bcr6_1km",sep=""))
+bs2 <- stack(paste(w,"BCR6/bcr6_1km",sep=""))
 r2 <- bs[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
@@ -100,7 +102,7 @@ brtplot <- function (j) {
   varimp <- as.data.frame(brt1$contributions)
   write.csv(varimp,file=paste(w,speclist[j],"varimp5.csv",sep=""))
   cvstats <- t(as.data.frame(brt1$cv.statistics))
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats5.csv",sep=""))
+  write.csv(cvstats,file=paste(w1,speclist[j],"cvstats5.csv",sep=""))
   pdf(paste(w1,speclist[j],"_plot5.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
@@ -109,14 +111,14 @@ brtplot <- function (j) {
   
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w1,speclist[j],"_pred1km5.png",sep=""), height=850, width=600)
-  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  png(file=paste(w1,speclist[j],"_pred1km5.png",sep=""), height=800, width=650)
+  par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
-  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
-  text(2400000,7950000,"Potential density (males/ha)", cex=1)
+  text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
   dev.off()
 
   PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
@@ -124,14 +126,44 @@ brtplot <- function (j) {
   xy <- PC1[,c(6,7)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
   png(file=paste(w,speclist[j],"_pred1km5_pts.png",sep=""), width=650, height=800)
-  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
-  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.69,0.89,0.82,0.87), axis.args=list(cex.axis=1))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
   plot(spdf, col = 'red', pch=1, cex=0.4, add = TRUE)
-  text(1200000,9000000,"Potential density (males/ha)", cex=1)
+  text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
+  dev.off()
+}
+
+mapplot <- function (j) {
+  rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
+  prev <- cellStats(rast, 'mean')	
+  max <- 3*prev
+  png(file=paste(w1,speclist[j],"_pred1km5.png",sep=""), height=800, width=650)
+  par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
+  dev.off()
+  
+  PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
+  PC1 <- PC1[PC1$ABUND>0,]
+  xy <- PC1[,c(6,7)]
+  spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
+  png(file=paste(w1,speclist[j],"_pred1km5_pts.png",sep=""), width=650, height=800)
+  par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  plot(spdf, col = 'red', pch=1, cex=0.4, add = TRUE)
+  text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
   dev.off()
 }
 
@@ -183,7 +215,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 61:length(speclist)) {
+for (j in 1:length(speclist)) {
   x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
@@ -249,6 +281,15 @@ for (j in 1:length(speclist)) {
   brtplot(j)
   }
 }
+
+#redo maps
+for (j in 1:length(speclist)) {
+  x1 <- try(load(paste(w1,speclist[j],"brt5.R",sep="")))
+  if (class(x1) != "try-error") {
+    mapplot(j)
+  }
+}
+
 
 cvstats <- cvstatsum(speclist)
 write.csv(cvstats,file=paste(w1,"_cvstats5.csv",sep=""))

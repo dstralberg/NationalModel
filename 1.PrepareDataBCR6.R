@@ -39,7 +39,7 @@ offWT <- data.table(melt(off))
 names(offWT) <- c("PKEY","SPECIES","logoffset")
 offWT$SPECIES <- as.character(offWT$SPECIES)
 offWT$PKEY <- as.character(offWT$PKEY)
-write.csv(offWT,file="G:/Boreal/NationalModelsV2/BCR6/offwt.csv", row.names=FALSE)
+#write.csv(offWT,file="G:/Boreal/NationalModelsV2/BCR6/offwt.csv", row.names=FALSE)
 
 load("F:/BAM/BamData/ARU/nwt-BU-offsets-2019-01-14.RData")
 SSBU <- unique(dd[,c(14,20:21)])
@@ -71,7 +71,7 @@ names(offBU2) <- c("PKEY","SPECIES","logoffset")
 offBU2$SPECIES <- as.character(offBU2$SPECIES)
 offBU2$PKEY <- as.character(offBU2$PKEY)
 offBU <- rbind(offBU,offBU2)
-write.csv(offBU,file="G:/Boreal/NationalModelsV2/BCR6/offbu.csv", row.names=FALSE)
+#write.csv(offBU,file="G:/Boreal/NationalModelsV2/BCR6/offbu.csv", row.names=FALSE)
 
 SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBULC)
 SSBCR6 <- cbind(SScombo, extract(bcr6, as.matrix(cbind(SScombo$X,SScombo$Y)))) #n=312906
@@ -174,28 +174,32 @@ bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 # writeRaster(bs2001bcr6,file=paste(w,"bcr6_2001rasters250",sep=""),overwrite=TRUE)
 bs2001bcr6 <- stack(paste(w,"bcr6_2001rasters250",sep=""))
 
-#bs2011bcr6 <- dropLayer(bs2011bcr6,19)
+#bs2011bcr6 <- dropLayer(bs2011bcr6,23)
 dat2011 <- cbind(SSBCR6, extract(bs2011bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
-dat2011 <-cbind(dat2011,extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
-names(dat2011)[ncol(dat2011)] <- "LCC"
+#dat2011 <-cbind(dat2011,extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
+#names(dat2011)[ncol(dat2011)] <- "LCC"
 dat2011 <-cbind(dat2011,extract(lf6,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "landform"
-dat2011$SS <- as.character(dat2011$SS) #n=52362
-dat2011 <- na.omit(dat2011) #n=51966
+dat2011 <-cbind(dat2011,extract(wet250,as.matrix(cbind(dat2011$X,dat2011$Y))))
+names(dat2011)[ncol(dat2011)] <- "wet"
+dat2011$SS <- as.character(dat2011$SS)
+dat2011 <- na.omit(dat2011) 
 dat_2011 <- inner_join(dat2011, PKEYcombo[,2:3], by=c("SS")) #n=166535
-dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:23]) #n=34022
+dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,]) #n=34022
 write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_v2.csv",row.names=FALSE)
 
-bs2001bcr6 <- dropLayer(bs2001bcr6,19)
+#bs2001bcr6 <- dropLayer(bs2001bcr6,19)
 dat2001 <- cbind(SSBCR6, extract(bs2001bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
-dat2001 <-cbind(dat2001,extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y)))) 
-names(dat2001)[ncol(dat2001)] <- "LCC"
+#dat2001 <-cbind(dat2001,extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y)))) 
+#names(dat2001)[ncol(dat2001)] <- "LCC"
 dat2001 <-cbind(dat2001,extract(lf6,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "landform"
+dat2001 <-cbind(dat2001,extract(wet250,as.matrix(cbind(dat2001$X,dat2001$Y))))
+names(dat2001)[ncol(dat2001)] <- "wet"
 dat2001$SS <- as.character(dat2001$SS)
 dat2001 <- na.omit(dat2001)
 dat_2001 <- inner_join(dat2001, PKEYcombo[,2:3], by=c("SS")) 
-dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:24]) #n=18837
+dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,]) #n=18837
 write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v2.csv",row.names=FALSE)
 
 #climate + terrain layers

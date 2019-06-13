@@ -35,7 +35,7 @@ get_cn <- function(z, rmax=0.9) {
 }
 
 
-bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.5)
+bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
 
 speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies.csv")
@@ -117,7 +117,9 @@ survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS)
 w <- "G:/Boreal/NationalModelsV2/Quebec/"
 setwd(w)
 
-for (j in 1:35) {
+for (j in 1:length(speclist)) {
+  x<-try(rast <- raster(paste(w,speclist[j],"_pred1km4.tif",sep="")))
+  if(class(x)=="try-error"){
   specoff <- filter(offlc, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
@@ -203,5 +205,5 @@ for (j in 1:35) {
     }
   }
   gc()
-
+  }
 }
