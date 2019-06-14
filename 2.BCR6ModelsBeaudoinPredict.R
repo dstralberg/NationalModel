@@ -49,6 +49,7 @@ dat_2011$count <- 1
 
 PC2011 <- read.csv(paste(w,"BCR6PC2011_v2.csv",sep=""))
 PC2001 <- read.csv(paste(w,"BCR6PC2001_v2.csv",sep=""))
+PC <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v2.csv")
 
 survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS), FUN=sum) 
 survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
@@ -74,12 +75,12 @@ setwd(w)
 
 #generate current predictions and plots from models
 brtplot <- function (j) {
-  load(paste(w1,speclist[j],"brt3.R",sep=""))
+  load(paste(w,speclist[j],"brt3.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
   write.csv(varimp,file=paste(w,speclist[j],"varimp3.csv",sep=""))
   cvstats <- t(as.data.frame(brt1$cv.statistics))
   write.csv(cvstats,file=paste(w,speclist[j],"cvstats3.csv",sep=""))
-  pdf(paste(w1,speclist[j],"_plot3.pdf",sep=""))
+  pdf(paste(w,speclist[j],"_plot3.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(bs2011, brt1, type="response", n.trees=brt1$n.trees)
@@ -127,7 +128,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 1:length(speclist)) {
+for (j in 1:40) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km3.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))

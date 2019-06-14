@@ -51,10 +51,9 @@ speclist <- speclist[,1]
 
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
-# bs2001 <- stack(paste(w,"BCR6/bcr6_2001rasters250.grd",sep=""))
-# bs2011 <- stack(paste(w,"BCR6/bcr6_2011rasters250.grd",sep=""))
-bs<-stack(paste(w,"bcr6clim_1km.grd",sep=""))
-bs2 <- stack(paste(w,"BCR6/bcr6_1km",sep=""))
+# bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
+bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
+bs <- stack(paste(w,"bcr6clim_1km.grd",sep=""))
 r2 <- bs[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
