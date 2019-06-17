@@ -132,7 +132,7 @@ brtplot <- function (j) {
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
-  plot(spdf, col = 'red', pch=1, cex=0.4, add = TRUE)
+  plot(spdf, col = 'red', pch=1, cex=PC1$ABUND, add = TRUE)
   text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
   dev.off()
 }
@@ -162,7 +162,7 @@ mapplot <- function (j) {
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
-  plot(spdf, col = 'red', pch=1, cex=0.4, add = TRUE)
+  plot(spdf, col = 'red', pch=1, cex=PC1$ABUND, add = TRUE)
   text(-200000,8900000,"Potential density (males/ha)", cex=1.2)
   dev.off()
 }
