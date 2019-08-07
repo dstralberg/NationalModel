@@ -15,6 +15,7 @@ proj4string(SS) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSBAM <- as.data.frame(spTransform(SS, LCC))
 PCBAM <- PCTBL
 PKEYBAM <- PKEY
+PKEYBAM$ARU <- 0
 
 load("F:/BAM/BAMData/atlas_data_processed-20181018.RData")
 SS <- na.omit(SS)
@@ -24,6 +25,7 @@ SSAtlas <- as.data.frame(spTransform(SS, LCC))
 PCAtlas <- PCTBL
 PKEYAtlas <- PKEY
 names(PKEYAtlas)[4] <- "YEAR"
+PKEYAtlas$ARU <- 0
 
 load("F:/BAM/BamData/ARU/nwt-wildtrax-offsets-2019-01-16.RData")
 SSWT <- unique(dd[dd$Y>0,c(33,39:40)])
@@ -32,6 +34,7 @@ coordinates(SSWT1) <- c("X", "Y")
 proj4string(SSWT1) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSWTLC <- as.data.frame(spTransform(SSWT1, LCC))
 PKEYWT <- unique(dd[,c(33,34,36)])
+PKEYWT$ARU <- 1
 #PCWT <- dd[,c(33,34,36,38,47)]
 PCWT <- melt(y)
 names(PCWT) <- c("PKEY","SPECIES","ABUND")
@@ -47,6 +50,7 @@ coordinates(SSBU) <- c("X", "Y")
 proj4string(SSBU) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSBULC <- as.data.frame(spTransform(SSBU, LCC))
 PKEYBU <- unique(dd[,c(14,15,17)])
+PKEYBU$ARU <- 1
 PCBU <- melt(y)
 names(PCBU) <- c("PKEY","SPECIES","ABUND")
 offBU <- data.table(melt(off))
@@ -62,6 +66,7 @@ proj4string(SSBU2) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,
 SSBU2LC <- as.data.frame(spTransform(SSBU2, LCC))
 SSBULC <- rbind(SSBULC,SSBU2LC)
 PKEYBU2 <- unique(dd[,c(14,15,17)])
+PKEYBU2$ARU <- 1
 PKEYBU <- rbind(PKEYBU,PKEYBU2)
 PCBU2 <- melt(y)
 names(PCBU2) <- c("PKEY","SPECIES","ABUND")
@@ -77,7 +82,7 @@ SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBULC)
 SSBCR6 <- cbind(SScombo, extract(bcr6, as.matrix(cbind(SScombo$X,SScombo$Y)))) #n=312906
 SSBCR6 <- na.omit(SSBCR6) #n=52362
 SSBCR6 <- SSBCR6[,1:3]
-PKEYcombo <- rbind(PKEYBAM[,c(1,2,8)],PKEYAtlas[,c(1,2,4)],PKEYWT,PKEYBU)
+PKEYcombo <- rbind(PKEYBAM[,c(1,2,8,27)],PKEYAtlas[,c(1,2,4,29)],PKEYWT,PKEYBU)
 PCcombo <- rbind(PCBAM[,c(3:5)], PCAtlas[,c(2,4:5)], PCWT, PCBU) 
 
 eco <- raster("F:/GIS/ecoregions/CEC/quebececo1.tif")
@@ -145,6 +150,10 @@ bs2011bcr6 <- stack(paste(w,"bcr6_2011rasters250",sep=""))
 
 # bs2011bcr6_1km <- resample(bs2011bcr6, bs, method="ngb")
 # bs2 <- stack(bs,bs2011bcr6_1km[[14:20]])
+# ARU <- bs2[[1]]*0
+# bs2 <- addLayer(bs2,ARU)
+# names(bs2[[nlayers(bs2)]]) <- "ARU"
+# names(bs2[[1]]) <- "bcr"
 # writeRaster(bs2,file=paste(w,"bcr6_1km",sep=""),overwrite=TRUE)
 bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 

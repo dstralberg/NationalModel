@@ -24,18 +24,18 @@ bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
-offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
-offlc <- rbind(offl[2:4],offla[2:4])
-offlc$PKEY <- as.character(offlc$PKEY)
-offlc$SPECIES <- as.character(offlc$SPECIES)
-offlb <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offwt.csv")
-offlb$PKEY <- as.character(offlb$PKEY)
-offlb$SPECIES <- as.character(offlb$SPECIES)
-offld <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offbu.csv")
-offld$PKEY <- as.character(offld$PKEY)
-offld$SPECIES <- as.character(offld$SPECIES)
-offcombo <- rbind(offlc,offlb,offld)
+# offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
+# offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
+# offlc <- rbind(offl[2:4],offla[2:4])
+# offlc$PKEY <- as.character(offlc$PKEY)
+# offlc$SPECIES <- as.character(offlc$SPECIES)
+# offlb <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offwt.csv")
+# offlb$PKEY <- as.character(offlb$PKEY)
+# offlb$SPECIES <- as.character(offlb$SPECIES)
+# offld <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offbu.csv")
+# offld$PKEY <- as.character(offld$PKEY)
+# offld$SPECIES <- as.character(offld$SPECIES)
+# offcombo <- rbind(offlc,offlb,offld)
 
 dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v2.csv") #n=18946
 dat2001$SS <- as.character(dat2001$SS)
@@ -55,6 +55,11 @@ survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS)
 survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
 survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS), FUN=sum) 
 survey2011 <- survey2011[sample(1:nrow(survey2011)), ]
+survey <- rbind(survey2001,survey2011) 
+
+# off6 <- right_join(offcombo,survey,by="PKEY")
+# write.csv(off6[,1:3],"G:/Boreal/NationalModelsV2/BCR6/offcombo.csv",row.names=FALSE)
+off6 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offcombo.csv")
 
 #calculating sample weights as inverse of survey effort within 5x5 pixel area
 samprast2011 <- rasterize(cbind(dat_2011$X,dat_2011$Y), r2, field=1, fun='sum')
@@ -162,7 +167,7 @@ cvstatsum <- function (speclist) {
 for (j in 1:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km3.tif",sep="")))
   if(class(x)=="try-error"){
-  specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
+  specoff <- filter(off6, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
   specdat2001 <- filter(PC2001, SPECIES == as.character(speclist[j]))
@@ -190,6 +195,7 @@ for (j in 1:length(speclist)) {
   datcombo$wat <- as.factor(datcombo$wat)
   datcombo$urbag <- as.factor(datcombo$urbag)
   datcombo$landform <- as.factor(datcombo$landform)
+  datcombo$wet <- as.factor(datcombo$wet)
 
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(9,11:18,21:26,28:29), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
