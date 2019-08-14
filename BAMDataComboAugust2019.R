@@ -93,7 +93,7 @@ SScombo <- unique(SScombo, by="SS")
 SScombo <- unique(SScombo, by=c("X","Y"))
 PKEYcombo <- rbind(PKEYBAM[,c(1,2,8,27)],PKEYAtlas[,c(1,2,4,29)],PKEYWT,PKEYBU2) #n=1033315 (19424 duplicates)
 PKEYcombo <- unique(PKEYcombo, by="PKEY")
-PCcombo <- rbind(PCBAM2[,c(2:4), PCAtlas[,c(2,4:5)], PCWT, PCBU2) #n=7556608
+PCcombo <- rbind(PCBAM2[,c(2:4), PCAtlas[,c(2,4:5)], PCWT, PCBU2)
 PCcombo <- unique(PCcombo, by="PKEY")
 
 rm(dd)
