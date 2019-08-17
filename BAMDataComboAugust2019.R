@@ -1,6 +1,7 @@
 library(raster)
 library(maptools)
 library(dplyr)
+library(plyr)
 library(data.table)
 library(reshape2)
 
@@ -12,7 +13,8 @@ coordinates(SS) <- c("X", "Y")
 proj4string(SS) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSBAM <- as.data.frame(spTransform(SS, LCC)) #n=206066 (198736 unique coordinates)
 PCBAM <- PCTBL
-PCBAM2 <- stats::aggregate(PCBAM[,2:5],by=list(PCBAM$SS,PCBAM$PKEY,PCBAM$SPECIES),FUN=sum)
+PCBAM$dis <- as.integer(PCBAM$dis)
+PCBAM$dur <- as.integer(PCBAM$dur)
 PKEYBAM <- PKEY #n=921275 (all unique)
 PKEYBAM$ARU <- 0
 
@@ -22,6 +24,8 @@ coordinates(SS) <- c("X", "Y")
 proj4string(SS) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSAtlas <- as.data.frame(spTransform(SS, LCC)) #n=103148 (95338 unique coordinates)
 PCAtlas <- PCTBL
+PCAtlas$ABUND <- as.integer(PCAtlas$ABUND)
+names(PCAtlas) <- c("PCODE", "PKEY","SS","SPECIES","ABUND","BEH","dis","dur")
 PKEYAtlas <- PKEY #n=103470 (all unique)
 names(PKEYAtlas)[4] <- "YEAR"
 PKEYAtlas$ARU <- 0
@@ -87,14 +91,15 @@ names(PCBU2) <- c("PKEY","SPECIES","ABUND")
 # offcombo <- rbind(offlc,offlb,offld)
 
 offcombo <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offcombo.csv")
-offcombo <- unique(offcombo, by="PKEY")
-SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBU2LC)
-SScombo <- unique(SScombo, by="SS")
-SScombo <- unique(SScombo, by=c("X","Y"))
+offcombo <- unique(offcombo, by="PKEY")#n=134790563
+SScombo <- rbind(SSBAM[,c(2,48,49)],SSAtlas[,c(1,6,7)],SSWTLC,SSBU2LC) #n=311595
+SScombo <- unique(SScombo, by="SS") #n=288662
+#SScombo <- unique(SScombo, by=c("X","Y"))
 PKEYcombo <- rbind(PKEYBAM[,c(1,2,8,27)],PKEYAtlas[,c(1,2,4,29)],PKEYWT,PKEYBU2) #n=1033315 (19424 duplicates)
-PKEYcombo <- unique(PKEYcombo, by="PKEY")
-PCcombo <- rbind(PCBAM2[,c(2:4)], PCAtlas[,c(2,4:5)], PCWT, PCBU2)
-PCcombo <- unique(PCcombo, by="PKEY")
+PKEYcombo <- unique(PKEYcombo, by="PKEY") #n=1013891
+PCcombo <- rbind(PCBAM[,c(2:7)], PCAtlas[,c(2:5,7:8)])
+PCcombo <- unique(PCcombo)
+PCcombo <- rbind(PCcombo[,2:4],PCWT, PCBU2)
 
 rm(dd)
 rm(off)
