@@ -133,3 +133,4 @@ rm(PKEYAtlas)
 rm(PKEYWT)
 
 save.image(file="F:/BAM/BAMData/BAM_data_package_August2019.RData")
+write.csv(PKEYcombo, file="F:/BAM/BAMData/BAM_data_package_August2019_PKEYs.csv")

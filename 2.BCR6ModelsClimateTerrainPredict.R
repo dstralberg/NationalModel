@@ -58,27 +58,27 @@ bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 r2 <- bs[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
-offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
-offlc <- rbind(offl[2:4],offla[2:4])
-offlc$PKEY <- as.character(offlc$PKEY)
-offlc$SPECIES <- as.character(offlc$SPECIES)
-offlb <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offwt.csv")
-offlb$PKEY <- as.character(offlb$PKEY)
-offlb$SPECIES <- as.character(offlb$SPECIES)
-offld <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offbu.csv")
-offld$PKEY <- as.character(offld$PKEY)
-offld$SPECIES <- as.character(offld$SPECIES)
-offcombo <- rbind(offlc,offlb,offld)
+# offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
+# offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
+# offlc <- rbind(offl[2:4],offla[2:4])
+# offlc$PKEY <- as.character(offlc$PKEY)
+# offlc$SPECIES <- as.character(offlc$SPECIES)
+# offlb <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offwt.csv")
+# offlb$PKEY <- as.character(offlb$PKEY)
+# offlb$SPECIES <- as.character(offlb$SPECIES)
+# offld <- read.csv("G:/Boreal/NationalModelsV2/BCR6/offbu.csv")
+# offld$PKEY <- as.character(offld$PKEY)
+# offld$SPECIES <- as.character(offld$SPECIES)
+# offcombo <- rbind(offlc,offlb,offld)
 
-cdat <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v2.csv") #n=18837
+cdat <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv") #n=48500
 cdat$SS <- as.character(cdat$SS)
-cdat <- cdat[!duplicated(cdat[, 2:3]), ]
-cdat$count <- 1
+#cdat <- cdat[!duplicated(cdat[, 2:3]), ]
+#cdat$count <- 1
 
-PC2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC2011_v2.csv")
-PC2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC2001_v2.csv")
-PC <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v2.csv")
+PC2011 <- read.csv(paste(w,"BCR6/BCR6PC2011_v3.csv",sep=""))
+PC2001 <- read.csv(paste(w,"BCR6/BCR6PC2001_v3.csv",sep=""))
+PC <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v3.csv")
 
 survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS), FUN=sum) 
 survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
@@ -88,7 +88,7 @@ survey2011 <- survey2011[sample(1:nrow(survey2011)), ]
 #calculating sample weights as inverse of survey effort within 5x5 pixel area
 samprast <- rasterize(cbind(cdat$X,cdat$Y), r2, field=1, fun='sum')
 sampsum25 <- focal(samprast, w=matrix(1,nrow=5,ncol=5), na.rm=TRUE)
-dat_c <- cbind(cdat,extract(sampsum25,cbind(cdat$X,cdat$Y)))
+dat_c <- cbind(cdat,extract(sampsum25,cbind(cdat$X,cdat$Y))) #n=48500
 names(dat_c)[ncol(dat_c)] <- "sampsum25"
 dat_c$wt <- 1/dat_c$sampsum25
 dat_c$SS <- as.character(dat_c$SS)
@@ -123,7 +123,7 @@ brtplot <- function (j) {
 
   PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
   PC1 <- PC1[PC1$ABUND>0,]
-  xy <- PC1[,c(6,7)]
+  xy <- PC1[,c(7,8)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
   png(file=paste(w,speclist[j],"_pred1km5_pts.png",sep=""), width=650, height=800)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
@@ -153,7 +153,7 @@ mapplot <- function (j) {
   
   PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
   PC1 <- PC1[PC1$ABUND>0,]
-  xy <- PC1[,c(6,7)]
+  xy <- PC1[,c(7,8)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
   png(file=paste(w1,speclist[j],"_pred1km5_pts.png",sep=""), width=650, height=800)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
@@ -168,7 +168,7 @@ mapplot <- function (j) {
   
   PC1 <- PC[PC$SPECIES==as.character(speclist[j]),]
   PC1 <- PC1[PC1$ABUND>0,]
-  xy <- PC1[,c(6,7)]
+  xy <- PC1[,c(7,8)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
   png(file=paste(w1,speclist[j],"_pred1km5_pts_small.png",sep=""), width=650, height=800)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
@@ -231,40 +231,40 @@ cvstatsum <- function (speclist) {
 }
 
 for (j in 1:length(speclist)) {
-  x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
-  if(class(x)=="try-error"){
+  # x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
+  # if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
   specdat2001 <- filter(PC2001, SPECIES == as.character(speclist[j]))
   specdat2001x <- aggregate(specdat2001$ABUND,by=list("PKEY"=specdat2001$PKEY,"SS"=specdat2001$SS), FUN=sum)
   names(specdat2001x)[3] <- "ABUND"
-  dat1 <- right_join(specdat2001x,survey2001[,1:3],by=c("SS","PKEY")) 
+  dat1 <- right_join(specdat2001x,survey2001,by=c("SS","PKEY")) 
   dat1$SPECIES <- as.character(speclist[j])
   dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND)) 
-  dat11 <- distinct(dat1,SS,.keep_all=TRUE) 
-  s2001 <- left_join(dat11,specoff, by=c("SPECIES","PKEY"))
+  dat11 <- distinct(dat1,SS,.keep_all=TRUE) #randomly select one survey for analysis 
+  s2001 <- left_join(dat11,specoff, by=c("PKEY","SPECIES"))
   d2001 <- left_join(s2001, dat_c, by=c("SS")) 
   
   specdat2011 <- filter(PC2011, SPECIES == as.character(speclist[j])) 
   specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS), FUN=sum)
   names(specdat2011x)[3] <- "ABUND"  
-  dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
+  dat2 <- right_join(specdat2011x,survey2011,by=c("SS","PKEY"))
   dat2$SPECIES <- as.character(speclist[j])
   dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
-  dat22 <- distinct(dat2,SS,.keep_all=TRUE)
-  s2011 <- left_join(dat22,specoff, by=c("SPECIES","PKEY"))
+  dat22 <- distinct(dat2,SS,.keep_all=TRUE) #randomly select one survey for analysis 
+  s2011 <- left_join(dat22,specoff, by=c("PKEY","SPECIES"))
   d2011 <- left_join(s2011, dat_c, by=c("SS"))
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo[,c(1:18,20:27,29:30,32:46)])
+  datcombo <- na.omit(datcombo[,c(1:18,20:27,29:30,32:40,42,44)])
 
-  potvar <- datcombo[,10:39]
+  potvar <- datcombo[,c(10:38)]
   var <- get_cn(potvar)
   
   datcombo$wat <- as.factor(datcombo$wat)
   datcombo$urbag <- as.factor(datcombo$urbag)
-  datcombo$landform <- as.factor(datcombo$landform)
+  #datcombo$landform <- as.factor(datcombo$landform)
   datcombo$wet <- as.factor(datcombo$wet)
   
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
@@ -286,7 +286,7 @@ for (j in 1:length(speclist)) {
       }  
     }
   gc()
-  }
+  # }
   }
 }
 
