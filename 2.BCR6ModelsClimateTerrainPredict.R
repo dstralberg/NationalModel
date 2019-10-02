@@ -59,10 +59,10 @@ bs <- crop(bs,bs2)
 bs <- resample(bs,bs2)
 bs3 <- stack(bs,bs2)
 
-bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2050.grd")
+bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2050_CANESM2_RCP45.grd")
 bsf <- resample(bsf,bs2)
 bs2050 <- stack(bsf,bs2)
-bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2080.grd")
+bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2080_CanESM2_RCP45.grd")
 bsf <- resample(bsf,bs2)
 bs2080 <- stack(bsf,bs2)
 
@@ -195,9 +195,9 @@ mapplot <- function (j) {
 futplot <- function (j) {
   load(paste(w1,speclist[j],"brt5.R",sep=""))
   r2080 <- raster::predict(bs2080, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(r2080, filename=paste(w1,speclist[j],"_pred1km5_2080",sep=""), format="GTiff",overwrite=TRUE)
+  writeRaster(r2080, filename=paste(w1,speclist[j],"_pred1km5_2080_RCP45_CanESM2",sep=""), format="GTiff",overwrite=TRUE)
   r2050 <- raster::predict(bs2050, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(r2050, filename=paste(w1,speclist[j],"_pred1km5_2050",sep=""), format="GTiff",overwrite=TRUE)  
+  writeRaster(r2050, filename=paste(w1,speclist[j],"_pred1km5_2050_RCP45_CanESM2",sep=""), format="GTiff",overwrite=TRUE)  
   
   rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
@@ -226,8 +226,8 @@ futplot <- function (j) {
 }
 
 futmapplot <- function (j) {
-  r2080 <- raster(paste(w1,speclist[j],"_pred1km5_2080.tif",sep=""))
-  r2050 <- raster(paste(w1,speclist[j],"_pred1km5_2050.tif",sep=""))  
+  r2080 <- raster(paste(w1,speclist[j],"_pred1km5_2080_CanESM2_RCP45.tif",sep=""))
+  r2050 <- raster(paste(w1,speclist[j],"_pred1km5_2050_CanESM2_RCP45.tif",sep=""))  
   rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev

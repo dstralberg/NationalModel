@@ -129,14 +129,14 @@ setwd(fut)
 clim2080 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2080)
 futclim <- crop(futclim,bcr6)
-writeRaster(futclim,file=paste(w,"bcr6_clim2080",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr6_clim2080_RCP85",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/NA_ENSEMBLE_rcp85_2050s_Bioclim_ASCII/"
 setwd(fut)
 clim2050 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2050)
 futclim <- crop(futclim,bcr6)
-writeRaster(futclim,file=paste(w,"bcr6_clim2050",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr6_clim2050_RCP85",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CanESM2_rcp45_2085_Bioclim_ASCII/"
 setwd(fut)
