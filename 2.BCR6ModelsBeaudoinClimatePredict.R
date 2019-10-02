@@ -36,12 +36,11 @@ get_cn <- function(z, rmax=0.9) {
 }
 
 bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
-provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
+provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- shapefile("G:/Boreal/NationalModelsV2/BCR6/bcr6.shp")
-p<- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("F:/GIS/hydrology/lakes_lcc.shp")
+p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
@@ -49,10 +48,14 @@ speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
-bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
-bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
-bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
-r2 <- bs2011_1km[[1]]
+# bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
+# bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
+# bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
+bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
+bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
+bs <- crop(bs,bs2)
+bs <- resample(bs,bs2)
+bs3 <- stack(bs,bs2)
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 # offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
@@ -85,8 +88,8 @@ cdat$SS <- as.character(cdat$SS)
 dat2011 <- left_join(dat2011,cdat[,1:30],by=c("SS","X","Y"))
 dat2001 <- left_join(dat2001,cdat[,1:30],by=c("SS","X","Y"))
 
-PC2011 <- read.csv(paste(w,"BCR6PC2011_v3.csv",sep=""))
-PC2001 <- read.csv(paste(w,"BCR6PC2001_v3.csv",sep=""))
+PC2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC2011_v3.csv")
+PC2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC2001_v3.csv")
 PC <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v3.csv")
 
 survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS), FUN=sum) 
@@ -110,6 +113,7 @@ names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
 dat_2001$wt <- 1/dat_2001$sampsum25
 dat_2001$SS <- as.character(dat_2001$SS) #n=18837
 
+w <-"G:/Boreal/NationalModelsV2/BCR6/"
 setwd(w)
 
 #generate current predictions and plots from models
@@ -122,7 +126,7 @@ brtplot <- function (j) {
   pdf(paste(w,speclist[j],"_plot6.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(bs2011, brt1, type="response", n.trees=brt1$n.trees)
+  rast <- raster::predict(bs3, brt1, type="response", n.trees=brt1$n.trees)
   writeRaster(rast, filename=paste(w,speclist[j],"_pred1km6",sep=""), format="GTiff",overwrite=TRUE)
   
   prev <- cellStats(rast, 'mean')	
@@ -198,8 +202,8 @@ cvstatsum <- function (speclist) {
 }
 
 for (j in 1:length(speclist)) {
-  # x<-try(rast <- raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
-  # if(class(x)=="try-error"){
+  x<-try(rast <- raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
+  if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
@@ -253,7 +257,7 @@ for (j in 1:length(speclist)) {
       }  
     }
   gc()
-  # }
+    }
   }
 }
 

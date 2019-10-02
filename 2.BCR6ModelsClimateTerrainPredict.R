@@ -36,12 +36,12 @@ get_cn <- function(z, rmax=0.9) {
 }
 
 bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
-provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
+provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/"
 bcr6 <- shapefile("G:/Boreal/NationalModelsV2/BCR6/bcr6.shp")
-p<- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("F:/GIS/hydrology/lakes_lcc.shp")
+p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
@@ -53,9 +53,18 @@ speclist <- speclist[,1]
 
 # bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
 # bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
-bs<-stack(paste(w,"bcr6clim_1km.grd",sep=""))
-bs2 <- stack(paste(w,"bcr6_1km",sep=""))
-r2 <- bs[[1]]
+bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
+bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
+bs <- crop(bs,bs2)
+bs <- resample(bs,bs2)
+bs3 <- stack(bs,bs2)
+
+bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2050.grd")
+bsf <- resample(bsf,bs2)
+bs2050 <- stack(bsf,bs2)
+bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2080.grd")
+bsf <- resample(bsf,bs2)
+bs2080 <- stack(bsf,bs2)
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 # offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
@@ -106,7 +115,7 @@ brtplot <- function (j) {
   pdf(paste(w1,speclist[j],"_plot5.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(bs2, brt1, type="response", n.trees=brt1$n.trees)
+  rast <- raster::predict(bs3, brt1, type="response", n.trees=brt1$n.trees)
   writeRaster(rast, filename=paste(w1,speclist[j],"_pred1km5",sep=""), format="GTiff",overwrite=TRUE)
   
   prev <- cellStats(rast, 'mean')	
@@ -197,7 +206,7 @@ futplot <- function (j) {
   png(file=paste(w1,speclist[j],"_pred1km5_2080.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
-  plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2080 prediction"))
   plot(r2080, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.84,0.87), axis.args=list(cex.axis=1.5))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
@@ -207,7 +216,36 @@ futplot <- function (j) {
   png(file=paste(w1,speclist[j],"_pred1km5_2050.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
-  plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2050 prediction"))
+  plot(r2050, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.84,0.87), axis.args=list(cex.axis=1.5))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
+  dev.off()  
+  
+}
+
+futmapplot <- function (j) {
+  r2080 <- raster(paste(w1,speclist[j],"_pred1km5_2080.tif",sep=""))
+  r2050 <- raster(paste(w1,speclist[j],"_pred1km5_2050.tif",sep=""))  
+  rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
+  prev <- cellStats(rast, 'mean')	
+  max <- 3*prev
+  
+  png(file=paste(w1,speclist[j],"_pred1km5_2080.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2080 prediction"))
+  plot(r2080, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.84,0.87), axis.args=list(cex.axis=1.5))
+  plot(bcr6, border="gray", add=TRUE)
+  plot(lc, col="gray", border=NA,add=TRUE)
+  text(2400000,7950000,"Potential density (males/ha)", cex=1)
+  dev.off()
+  
+  png(file=paste(w1,speclist[j],"_pred1km5_2050.png",sep=""), height=850, width=600)
+  par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2050 prediction"))
   plot(r2050, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.84,0.87), axis.args=list(cex.axis=1.5))
   plot(bcr6, border="gray", add=TRUE)
   plot(lc, col="gray", border=NA,add=TRUE)
@@ -231,8 +269,8 @@ cvstatsum <- function (speclist) {
 }
 
 for (j in 1:length(speclist)) {
-  # x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
-  # if(class(x)=="try-error"){
+  x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
+  if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
@@ -286,7 +324,7 @@ for (j in 1:length(speclist)) {
       }  
     }
   gc()
-  # }
+   }
   }
 }
 
@@ -297,11 +335,26 @@ for (j in 1:length(speclist)) {
   }
 }
 
+for (j in 1:length(speclist)) {
+  x1 <- try(load(paste(w1,speclist[j],"brt5.R",sep="")))
+  if (class(x1) != "try-error") {
+    futplot(j)
+  }
+}
+
 #redo maps
 for (j in 1:length(speclist)) {
   x1 <- try(load(paste(w1,speclist[j],"brt5.R",sep="")))
   if (class(x1) != "try-error") {
     mapplot(j)
+  }
+}
+
+#redo future maps
+for (j in 1:length(speclist)) {
+  x1 <- try(load(paste(w1,speclist[j],"brt5.R",sep="")))
+  if (class(x1) != "try-error") {
+    futmapplot(j)
   }
 }
 

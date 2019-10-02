@@ -124,6 +124,20 @@ lf6 <- crop(lf,bcr6)
 road <- raster("G:/Boreal/NationalModelsV2/BCR6/lineDensityMap_BCR6_Roads_v0.2.3_FFT_radius10000_t0.tif")
 bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
 
+fut <- "E:/CMIP5/NA_ENSEMBLE_rcp85_2080s_Bioclim_ASCII/"
+setwd(fut)
+clim2080 <- list.files(fut, pattern =".asc$")
+futclim<-stack(clim2080)
+futclim <- crop(futclim,bcr6)
+writeRaster(futclim,file=paste(w,"bcr6_clim2080",sep=""),overwrite=TRUE)
+
+fut <- "E:/CMIP5/NA_ENSEMBLE_rcp85_2050s_Bioclim_ASCII/"
+setwd(fut)
+clim2050 <- list.files(fut, pattern =".asc$")
+futclim<-stack(clim2050)
+futclim <- crop(futclim,bcr6)
+writeRaster(futclim,file=paste(w,"bcr6_clim2050",sep=""),overwrite=TRUE)
+
 # b2011 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
 # setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/")
 # bs2011 <- stack(raster(b2011[1]))

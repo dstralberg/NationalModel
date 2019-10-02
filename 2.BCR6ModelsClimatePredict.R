@@ -53,9 +53,11 @@ speclist <- speclist[,1]
 
 # bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
 # bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
-bs<-stack(paste(w,"bcr6clim_1km.grd",sep=""))
-bs2 <- stack(paste(w,"bcr6_1km",sep=""))
-r2 <- bs[[1]]
+bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
+bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
+bs <- crop(bs,bs2)
+bs <- resample(bs,bs2)
+bs3 <- stack(bs,bs2)
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 # offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
@@ -106,7 +108,7 @@ brtplot <- function (j) {
   pdf(paste(w1,speclist[j],"_plot7.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(bs2, brt1, type="response", n.trees=brt1$n.trees)
+  rast <- raster::predict(bs3, brt1, type="response", n.trees=brt1$n.trees)
   writeRaster(rast, filename=paste(w1,speclist[j],"_pred1km7",sep=""), format="GTiff",overwrite=TRUE)
   
   prev <- cellStats(rast, 'mean')	
@@ -231,7 +233,7 @@ cvstatsum <- function (speclist) {
 }
 
 for (j in 1:length(speclist)) {
-  # x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep="")))
+  # x<-try(rast <- raster(paste(w1,speclist[j],"_pred1km7.tif",sep="")))
   # if(class(x)=="try-error"){
   specoff <- filter(offcombo, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
@@ -259,13 +261,13 @@ for (j in 1:length(speclist)) {
   datcombo <- rbind(d2001,d2011)
   datcombo <- na.omit(datcombo[,c(1:18,20:27,29:30,32:35,44)])
 
-  potvar <- datcombo[,c(10:33)]
+  potvar <- datcombo[,c(10:32)]
   var <- get_cn(potvar)
   
-  datcombo$wat <- as.factor(datcombo$wat)
-  datcombo$urbag <- as.factor(datcombo$urbag)
-  #datcombo$landform <- as.factor(datcombo$landform)
-  datcombo$wet <- as.factor(datcombo$wet)
+  # datcombo$wat <- as.factor(datcombo$wat)
+  # datcombo$urbag <- as.factor(datcombo$urbag)
+  # #datcombo$landform <- as.factor(datcombo$landform)
+  # datcombo$wet <- as.factor(datcombo$wet)
   
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {

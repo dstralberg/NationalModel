@@ -5,12 +5,12 @@ library(maptools)
 library(dplyr)
 
 bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
-provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
+provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- shapefile("G:/Boreal/NationalModelsV2/BCR6/bcr6.shp")
-p<- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("F:/GIS/hydrology/lakes_lcc.shp")
+p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
 speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
@@ -163,7 +163,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 60:length(speclist)) {
+for (j in 1:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km4.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
