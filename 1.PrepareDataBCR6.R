@@ -143,6 +143,7 @@ setwd(fut)
 clim2080 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2080)
 futclim <- crop(futclim,bcr6)
+names(futclim) <- gsub("CanESM2_rc45_2055_","",names(futclim))
 writeRaster(futclim,file=paste(w,"bcr6_clim2080_CanESM2_RCP45",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CanESM2_rcp45_2055_Bioclim_ASCII/"
@@ -164,6 +165,7 @@ setwd(fut)
 clim2050 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2050)
 futclim <- crop(futclim,bcr6)
+names(futclim) <- gsub("CCSM4_rcp45_2055_","",names(futclim))
 writeRaster(futclim,file=paste(w,"bcr6_clim2050_CCSM4_RCP45",sep=""),overwrite=TRUE)
 
 # b2011 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
