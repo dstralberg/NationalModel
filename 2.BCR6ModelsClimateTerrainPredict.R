@@ -195,15 +195,15 @@ mapplot <- function (j) {
 futplot <- function (j) {
   load(paste(w1,speclist[j],"brt5.R",sep=""))
   r2080 <- raster::predict(bs2080, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(r2080, filename=paste(w1,speclist[j],"_pred1km5_2080_RCP45_CanESM2",sep=""), format="GTiff",overwrite=TRUE)
+  writeRaster(r2080, filename=paste(w1,speclist[j],"_pred1km5_2080_CanESM2_RCP45",sep=""), format="GTiff",overwrite=TRUE)
   r2050 <- raster::predict(bs2050, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(r2050, filename=paste(w1,speclist[j],"_pred1km5_2050_RCP45_CanESM2",sep=""), format="GTiff",overwrite=TRUE)  
+  writeRaster(r2050, filename=paste(w1,speclist[j],"_pred1km5_2050_CanESM2_RCP45",sep=""), format="GTiff",overwrite=TRUE)  
   
   rast <- raster(paste(w1,speclist[j],"_pred1km5.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
   
-  png(file=paste(w1,speclist[j],"_pred1km5_2080.png",sep=""), height=850, width=600)
+  png(file=paste(w1,speclist[j],"_pred1km5_2080_CanESM2_RCP45.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2080 prediction"))
@@ -213,7 +213,7 @@ futplot <- function (j) {
   text(2400000,7950000,"Potential density (males/ha)", cex=1)
   dev.off()
   
-  png(file=paste(w1,speclist[j],"_pred1km5_2050.png",sep=""), height=850, width=600)
+  png(file=paste(w1,speclist[j],"_pred1km5_2050_CanESM2_RCP45.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2050 prediction"))
@@ -232,7 +232,7 @@ futmapplot <- function (j) {
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
   
-  png(file=paste(w1,speclist[j],"_pred1km5_2080.png",sep=""), height=850, width=600)
+  png(file=paste(w1,speclist[j],"_pred1km5_2080_CanESM2_RCP45.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(r2080, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2080 prediction"))
@@ -242,7 +242,7 @@ futmapplot <- function (j) {
   text(2400000,7950000,"Potential density (males/ha)", cex=1)
   dev.off()
   
-  png(file=paste(w1,speclist[j],"_pred1km5_2050.png",sep=""), height=850, width=600)
+  png(file=paste(w1,speclist[j],"_pred1km5_2050_CanESM2_RCP45.png",sep=""), height=850, width=600)
   par(cex.main=1, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(r2050, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"2050 prediction"))
