@@ -21,9 +21,9 @@ QCSS <- SSLCC[SSLCC$JURS=="QC",]
 # offl$PKEY <- as.character(offl$PKEY)
 # write.csv(offl,file=paste(w,"BAMoffsets.csv",sep=""))
                        
-eco <- raster("F:/GIS/ecoregions/CEC/quebececo1.tif")
-nalc <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
-quebec <- raster("F:/GIS/basemaps/quebec250m1.tif")
+eco <- raster("E:/GIS/ecoregions/CEC/quebececo1.tif")
+nalc <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+quebec <- raster("E:/GIS/basemaps/quebec250m1.tif")
 urbag <- raster("G:/Boreal/NationalModelsV2/urbag2011_lcc1.tif")
 uaq <- crop(urbag,quebec)
 dev25 <- focal(uaq, fun=mean, w=matrix(1/25, nc=5, nr=5), na.rm=TRUE)

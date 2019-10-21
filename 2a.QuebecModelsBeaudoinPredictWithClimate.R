@@ -36,7 +36,7 @@ get_cn <- function(z, rmax=0.9) {
 
 
 bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
-provstate <- rgdal::readOGR("F:/GIS/basemaps/province_state_line.shp")
+provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 
 speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies.csv")
 speclist <- speclist[,1]
@@ -45,7 +45,7 @@ qbs2011_1km <- brick("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
 r2 <- qbs2011_1km[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-quebec <- raster("F:/GIS/basemaps/quebec250m1.tif")
+quebec <- raster("E:/GIS/basemaps/quebec250m1.tif")
 cur <- "E:/CMIP5/baseline19812010/"
 setwd(cur)
 clim <- list.files(cur, pattern =".asc$")

@@ -7,37 +7,33 @@ library(dplyr)
 bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.5)
 provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 
-speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies.csv")
-speclist <- speclist[,1]
-
 qbs2011_1km <- brick("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
 r2 <- qbs2011_1km[[1]]
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
-offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
-offlc <- rbind(offl[2:4],offla[2:4])
-offlc$PKEY <- as.character(offlc$PKEY)
-offlc$SPECIES <- as.character(offlc$SPECIES)
-rm(offla,offl)
 
-dat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCdat2001.csv") #n=20765
-dat2001 <- dat2001[,c(1:2,48:146,149)]
-dat2001$PCODE <- as.character(dat2001$PCODE)
+dat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2001_v4.csv") #n=38256
+dat2001 <- dat2001[,c(2,48:146,149)]
 dat2001$SS <- as.character(dat2001$SS)
 dat_2001 <- dat2001
+bdat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCBITHdat2001.csv") #n=2454
+bdat2001 <- bdat2001[,1:101]
+bdat2001$SS <- as.character(bdat2001$SS)
+bdat_2001 <- bdat2001
 
-dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCdat2011.csv") #n=20765
-dat2011 <- dat2011[,c(1:2,48:146,149)]
-dat2011$PCODE <- as.character(dat2011$PCODE)
+d2001 <- rbind(dat2001,bdat2001) #n=23219
+dat_2001 <- d2001[!duplicated(d2001[, 1]), ] #n=23034
+
+dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2011_v4.csv") #n=38256
+dat2011 <- dat2011[,c(2,48:146,149)]
 dat2011$SS <- as.character(dat2011$SS)
-adat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCAtlasdat2011.csv") #n=31456
-adat2011 <- adat2011[,c(1:2,6:104,107)]
-adat2011$PCODE <- as.character(adat2011$PCODE)
-adat2011$SS <- as.character(adat2011$SS)
+bdat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCBITHdat2011.csv") #n=2454
+bdat2011 <- bdat2011[,1:101]
+bdat2011$SS <- as.character(bdat2011$SS)
+bdat_2011 <- bdat2011
 
-d2011 <- rbind(dat2011,adat2011) #n=52221
-dat_2011 <- d2011[!duplicated(d2011[, 1:2]), ] #n=41963
+d2011 <- rbind(dat2011,bdat2011) #n=54675
+dat_2011 <- d2011[!duplicated(d2011[, 1]), ] #n=44232
 
 #calculating sample weights as inverse of number of survey points within 5x5 pixel radius
 samprast2011 <- rasterize(cbind(dat_2011$X,dat_2011$Y), r2, field=1)
@@ -57,15 +53,27 @@ names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
 dat_2001$wt <- 1/dat_2001$sampsum25
 dat_2001$SS <- as.character(dat_2001$SS) #n=20765
 rm(samprast2001)
-# rm(r2)
 
-APC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/AtlasPC2011.csv")
-QCPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2011.csv")
+APC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/AtlasPC2011.csv") #n=628787
+APC2011$PKEY <- as.character(APC2011$PKEY)
+APC2011$SS <- as.character(APC2011$SS)
+BPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BITHPC2011.csv") #n=1361
+BPC2011$PKEY <- as.character(BPC2011$PKEY)
+BPC2011$SS <- as.character(BPC2011$SS)
+QCPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2011.csv") #n=252792
+QCPC2011$PKEY <- as.character(QCPC2011$PKEY)
+QCPC2011$SS <- as.character(QCPC2011$SS)
+
+BPC2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BITHPC2001.csv") #n=1361
+BPC2001$PKEY <- as.character(BPC2001$PKEY)
+BPC2001$SS <- as.character(BPC2001$SS)
 QCPC2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2001.csv") #n=212901
 QCPC2001$PKEY <- as.character(QCPC2001$PKEY)
 QCPC2001$SS <- as.character(QCPC2001$SS)
-PC2011 <- rbind(APC2011[,1:4],QCPC2011[,1:4]) #n=881579
-PC2011 <- distinct(PC2011) #n=828646
+
+PC2001 <- rbind()
+PC2011 <- rbind(APC2011[,1:4],BPC2011[,c(1:2,7:8)],QCPC2011[,1:4]) #n=882940
+PC2011 <- distinct(PC2011) #n=830007
 PC2011$PKEY <- as.character(PC2011$PKEY)
 PC2011$SS <- as.character(PC2011$SS)
 
