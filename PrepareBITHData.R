@@ -5,6 +5,9 @@ library(maptools)
 library(dplyr)
 library(data.table)
 
+lazea <- CRS("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
+LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+
 w <-"G:/Boreal/NationalModelsV2/Quebec/"
 bith <- read.csv("F:/BAM/BAMData/BITH/Aubry_FichierGlobalGRBI_Oct2015.csv")
 
@@ -20,19 +23,16 @@ write.csv(PC2001,paste(w,"BITHPC2001.csv",sep=""),row.names=FALSE)
 write.csv(PC2011,paste(w,"BITHPC2011.csv",sep=""),row.names=FALSE)
 
 PKEY <- unique(PC[,c(2,4,7)])
+PKEY$SS <- as.character(PKEY$SS)
 write.csv(PKEY,paste(w,"BITHPKEY.csv",sep=""),row.names=FALSE)
-
 
 SS <- bith[,c(4,10:11)]
 names(SS) <- c("SS","Y","X")
-LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 coordinates(SS) <- c("X", "Y") 
 proj4string(SS) <- CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 SSQC <- as.data.frame(spTransform(SS, LCC))
 
-coordinates(SSQC) <- c("X", "Y") 
-proj4string(SSQC) <- LCC
-ss <- as.data.frame(spTransform(SSQC, lazea))
+ss <- as.data.frame(spTransform(SS, lazea))
 ss$SS <- as.character(ss$SS)
 
 #Landform (100-m) Lazea projection
@@ -52,35 +52,27 @@ setwd("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/")
 bs2011 <- stack(raster(b2011[1]))
 for (i in 2:length(b2011)) {bs2011 <- addLayer(bs2011, raster(b2011[i]))}
 names(bs2011) <- gsub("NFI_MODIS250m_2011_kNN_","",names(bs2011))
-bs2011quebec <- crop(bs2011,quebec)
-bs2011quebec <- mask(bs2011quebec,quebec)
 
 bs2011_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2011_750.grd")
 names(bs2011_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Species","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Structure","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Landcover","Landsc750",names(bs2011_Gauss750))
-bs2011quebec_Gauss750 <- crop(bs2011,quebec)
-bs2011quebec_Gauss750 <- mask(bs2011quebec_Gauss750,quebec)
 
 b2001 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
 setwd("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
 bs2001 <- stack(raster(b2001[1]))
 for (i in 2:length(b2001)) {bs2001 <- addLayer(bs2001, raster(b2001[i]))}
 names(bs2001) <- gsub("NFI_MODIS250m_2001_kNN_","",names(bs2001))
-bs2001quebec <- crop(bs2001,quebec)
-bs2001quebec <- mask(bs2001quebec,quebec)
 
 bs2001_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2001_750.grd")
 names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Landcover","Landsc750",names(bs2001_Gauss750))
-bs2001quebec_Gauss750 <- crop(bs2001,quebec)
-bs2001quebec_Gauss750 <- mask(bs2001quebec_Gauss750,quebec)
 
 #landcover and derived variables, LCC projection
-nalc <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+nalc <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
 lc <- brick("G:/Boreal/NationalModelsV2/quebec/lc.grd")
 lf <- raster("E:/GIS/topoedaphic/lf1k.tif")
 
@@ -90,9 +82,9 @@ mr <- c(1, 2500000, 1,  NA, NA, 0)
 rcroad <- matrix(mr, ncol=3, byrow=TRUE)
 rrc <- reclassify(road,rcroad)
 
-dat2011 <- cbind(SSQC, extract(bs2011quebec,as.matrix(cbind(SSQC$X,SSQC$Y))))
-dat2011 <- cbind(dat2011, extract(bs2011quebec_Gauss750,as.matrix(cbind(dat2011$X,dat2011$Y))))
-dat2011 <-cbind(dat2011, extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
+dat2011 <- cbind(SSQC, extract(bs2011,as.matrix(cbind(SSQC$X,SSQC$Y))))
+dat2011 <- cbind(dat2011, extract(bs2011_Gauss750,as.matrix(cbind(dat2011$X,dat2011$Y))))
+dat2011 <- cbind(dat2011, extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
 names(dat2011)[ncol(dat2011)] <- "nalc"
 dat2011 <- cbind(dat2011, extract(rrc,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "rrc"
@@ -105,8 +97,8 @@ dat_2011 <- inner_join(dat_2011, PKEY[,1:2], by=c("SS"))
 dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:(ncol(dat_2011)-1)]) #n=1340
 write.csv(dat_2011,"G:/Boreal/NationalModelsV2/quebec/QCBITHdat2011.csv",row.names=FALSE)
 
-dat2001 <- cbind(SSQC, extract(bs2001quebec,as.matrix(cbind(SSQC$X,SSQC$Y))))
-dat2001 <- cbind(dat2001, extract(bs2001quebec_Gauss750,as.matrix(cbind(dat2001$X,dat2001$Y))))
+dat2001 <- cbind(SSQC, extract(bs2001,as.matrix(cbind(SSQC$X,SSQC$Y))))
+dat2001 <- cbind(dat2001, extract(bs2001_Gauss750,as.matrix(cbind(dat2001$X,dat2001$Y))))
 dat2001 <-cbind(dat2001, extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y)))) 
 names(dat2001)[ncol(dat2001)] <- "nalc"
 dat2001 <- cbind(dat2001, extract(rrc,as.matrix(cbind(dat2001$X,dat2001$Y))))

@@ -33,6 +33,16 @@ ss <- cbind(ss,"TRI"=extract(TRI,as.matrix(cbind(ss$X,ss$Y))))
 ss <- cbind(ss,"slope"=extract(slope,as.matrix(cbind(ss$X,ss$Y))))
 ss <- cbind(ss,"roughness"=extract(roughness,as.matrix(cbind(ss$X,ss$Y))))
 
+# TPI <- raster("E:/GIS/topoedaphic/TPI250.tif")
+# TRI <- raster("E:/GIS/topoedaphic/TRI250.tif")
+# slope <- raster("E:/GIS/topoedaphic/slope250.tif")
+# roughness <- raster("E:/GIS/topoedaphic/rough250.tif")
+# topo <- stack(TPI,TRI,slope,roughness)
+# topoquebec <- crop(topo,quebec)
+# topoquebec <- resample(topoquebec,quebec)
+# writeRaster(topoquebec,file="G:/Boreal/NationalModelsV2/quebec/topo.grd")
+# topoquebec <- brick("G:/Boreal/NationalModelsV2/quebec/topo.grd")
+
 #Beaudoin biomass and landscape proportion, LCC projection
 b2011 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
 setwd("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/")
@@ -47,7 +57,7 @@ names(bs2011_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2011_Gauss750
 names(bs2011_Gauss750) <- gsub("Species","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Structure","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Landcover","Landsc750",names(bs2011_Gauss750))
-bs2011quebec_Gauss750 <- crop(bs2011,quebec)
+bs2011quebec_Gauss750 <- crop(bs2011_Gauss750,quebec)
 bs2011quebec_Gauss750 <- mask(bs2011quebec_Gauss750,quebec)
 
 b2001 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
@@ -63,29 +73,38 @@ names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750
 names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Landcover","Landsc750",names(bs2001_Gauss750))
-bs2001quebec_Gauss750 <- crop(bs2001,quebec)
+bs2001quebec_Gauss750 <- crop(bs2001_Gauss750,quebec)
 bs2001quebec_Gauss750 <- mask(bs2001quebec_Gauss750,quebec)
 
 #landcover and derived variables, LCC projection
-nalc <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
-mwat <- c(0, 17.1, 0,  17.9, 18.1, 1,  18.9, 20, 0)
-rclwat <- matrix(mwat, ncol=3, byrow=TRUE)
-water <- reclassify(nalc,rclwat)
-murb <- c(0, 16.1, 0,  16.9, 17.1, 1,  17.9, 20, 0)
-rclurb <- matrix(murb, ncol=3, byrow=TRUE)
-urban <- reclassify(nalc,rclurb)
-mag <- c(0, 14.1, 0,  14.9, 15.1, 1,  15.9, 20, 0)
-rclag <- matrix(mag, ncol=3, byrow=TRUE)
-ag <- reclassify(nalc,rclag)
-x <- stack(urban,ag)
-urbag <- max(x)
+nalc <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+# mwat <- c(0, 17.1, 0,  17.9, 18.1, 1,  18.9, 20, 0)
+# rclwat <- matrix(mwat, ncol=3, byrow=TRUE)
+# water <- reclassify(nalc,rclwat)
+# murb <- c(0, 16.1, 0,  16.9, 17.1, 1,  17.9, 20, 0)
+# rclurb <- matrix(murb, ncol=3, byrow=TRUE)
+# urban <- reclassify(nalc,rclurb)
+# mag <- c(0, 14.1, 0,  14.9, 15.1, 1,  15.9, 20, 0)
+# rclag <- matrix(mag, ncol=3, byrow=TRUE)
+# ag <- reclassify(nalc,rclag)
+# x <- stack(urban,ag)
+# urbag <- max(x)
+# 
+# fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
+# dev750 <- focal(urbag,w=fw750,na.rm=TRUE)
+# led750 <- focal(water,w=fw750,na.rm=TRUE)
+# lc <- stack(dev750,led750,water,urbag)
+# lc <- crop(lc,quebec)
+# names(lc) <- c("dev750","led750","water","urbag")
+# writeRaster(lc,file="G:/Boreal/NationalModelsV2/quebec/lc.grd")
+# lcquebec <- resample(lc,quebec,method="ngb")
+# writeRaster(quebeclc,file="G:/Boreal/NationalModelsV2/quebec/quebeclc.grd")
+lcquebec <- brick("G:/Boreal/NationalModelsV2/quebec/quebeclc.grd")
 
-fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
-dev750 <- focal(urbag,w=fw750,na.rm=TRUE)
-led750 <- focal(water,w=fw750,na.rm=TRUE)
-lc <- stack(dev750,led750,water,urbag)
-lc <- crop(lc,quebec)
-names(lc) <- c("dev750","led750","water","urbag")
+combo2011 <- stack(bs2011quebec,bs2011quebec_Gauss750,lcquebec,topoquebec)
+writeRaster(combo2011,file="G:/Boreal/NationalModelsV2/quebec/combo2011.grd", overwrite=TRUE)
+combo2001 <- stack(bs2001quebec,bs2001quebec_Gauss750,lcquebec,topoquebec)
+writeRaster(combo2001,file="G:/Boreal/NationalModelsV2/quebec/combo2001.grd", overwrite=TRUE)
 
 lf <- raster("E:/GIS/topoedaphic/lf1k.tif")
 
@@ -95,7 +114,7 @@ mr <- c(1, 2500000, 1,  NA, NA, 0)
 rcroad <- matrix(mr, ncol=3, byrow=TRUE)
 rrc <- reclassify(road,rcroad)
 
-dat2011 <- cbind(SSQC, extract(bs2011quebec,as.matrix(cbind(SSQC$X,SSQC$Y))))
+dat2011 <- cbind(SSQCdf, extract(bs2011quebec,as.matrix(cbind(SSQCdf$X,SSQCdf$Y))))
 dat2011 <- cbind(dat2011, extract(bs2011quebec_Gauss750,as.matrix(cbind(dat2011$X,dat2011$Y))))
 dat2011 <-cbind(dat2011, extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
 names(dat2011)[ncol(dat2011)] <- "nalc"
@@ -103,14 +122,14 @@ dat2011 <- cbind(dat2011, extract(rrc,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "rrc"
 dat2011 <- cbind(dat2011, extract(lf,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "lf"
-dat2011 <- cbind(dat2011, extract(lc,as.matrix(cbind(dat2011$X,dat2011$Y))))
+dat2011 <- cbind(dat2011, extract(quebeclc,as.matrix(cbind(dat2011$X,dat2011$Y))))
 dat_2011 <- merge(as.data.frame(dat2011)[,1:ncol(dat2011)], ss[,c(1,4:7)], by=c("SS")) #n=41554
 dat_2011 <- na.omit(dat_2011) #n=40994
 dat_2011 <- inner_join(dat_2011, PKEYcombo[,2:3], by=c("SS")) #n=88747
 dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:(ncol(dat_2011)-1)]) #n=38256
 write.csv(dat_2011,"G:/Boreal/NationalModelsV2/quebec/quebec_dat2011_v4.csv",row.names=FALSE)
 
-dat2001 <- cbind(SSQC, extract(bs2001quebec,as.matrix(cbind(SSQC$X,SSQC$Y))))
+dat2001 <- cbind(SSQCdf, extract(bs2001quebec,as.matrix(cbind(SSQCdf$X,SSQCdf$Y))))
 dat2001 <- cbind(dat2001, extract(bs2001quebec_Gauss750,as.matrix(cbind(dat2001$X,dat2001$Y))))
 dat2001 <-cbind(dat2001, extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y)))) 
 names(dat2001)[ncol(dat2001)] <- "nalc"
@@ -118,7 +137,7 @@ dat2001 <- cbind(dat2001, extract(rrc,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "rrc"
 dat2001 <- cbind(dat2001, extract(lf,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "lf"
-dat2001 <- cbind(dat2001, extract(lc,as.matrix(cbind(dat2001$X,dat2001$Y))))
+dat2001 <- cbind(dat2001, extract(quebeclc,as.matrix(cbind(dat2001$X,dat2001$Y))))
 dat_2001 <- merge(as.data.frame(dat2001)[,1:ncol(dat2001)], ss[,c(1,4:7)], by=c("SS")) #n=41554
 dat_2001 <- na.omit(dat_2001) #n=40994
 dat_2001 <- inner_join(dat_2001, PKEYcombo[,2:3], by=c("SS")) #n=88747
