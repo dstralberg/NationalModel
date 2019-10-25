@@ -13,6 +13,9 @@ speclist <- speclist[,1]
 qbs2011_1km <- brick("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
 r2 <- qbs2011_1km[[1]]
 
+combo2011 <- brick("G:/Boreal/NationalModelsV2/quebec/combo2011.grd")
+names(combo2011)[191:194] <- c("TPI","TRI","slope","roughness")
+
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 offlc <- read.csv("G:/Boreal/NationalModelsV2/quebec/QCoffsets_v4.csv")
 
@@ -23,22 +26,22 @@ dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2011_v4.csv") #
 dat2011$SS <- as.character(dat2011$SS)
 
 #calculating sample weights as inverse of number of survey points within 5x5 pixel radius
-samprast2011 <- rasterize(cbind(dat_2011$X,dat_2011$Y), r2, field=1)
+samprast2011 <- rasterize(cbind(dat2011$X,dat2011$Y), r2, field=1, fun='sum')
 gf <- focalWeight(samprast2011, 25, "Gauss")
 sampsum25 <- focal(samprast2011, w=gf, na.rm=TRUE)
-dat_2011 <- cbind(dat2011,extract(sampsum25,as.matrix(cbind(dat_2011$X,dat_2011$Y))))
-names(dat_2011)[ncol(dat_2011)] <- "sampsum25"
-dat_2011$wt <- 1/dat_2011$sampsum25
-dat_2011$SS <- as.character(dat_2011$SS) #n=42210
+dat2011 <- cbind(dat2011,extract(sampsum25,as.matrix(cbind(dat2011$X,dat2011$Y))))
+names(dat2011)[ncol(dat2011)] <- "sampsum25"
+dat2011$wt <- 1/dat2011$sampsum25
+dat2011$SS <- as.character(dat2011$SS) #n=42210
 rm(samprast2011)
 
-samprast2001 <- rasterize(cbind(dat_2001$X,dat_2001$Y), r2, field=1)
+samprast2001 <- rasterize(cbind(dat2001$X,dat2001$Y), r2, field=1, fun='sum')
 gf <- focalWeight(samprast2001, 25, "Gauss")
 sampsum25 <- focal(samprast2001, w=gf, na.rm=TRUE)
-dat_2001 <- cbind(dat2001,extract(sampsum25,as.matrix(cbind(dat_2001$X,dat_2001$Y))))
-names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
-dat_2001$wt <- 1/dat_2001$sampsum25
-dat_2001$SS <- as.character(dat_2001$SS) #n=20765
+dat2001 <- cbind(dat2001,extract(sampsum25,as.matrix(cbind(dat2001$X,dat2001$Y))))
+names(dat2001)[ncol(dat2001)] <- "sampsum25"
+dat2001$wt <- 1/dat2001$sampsum25
+dat2001$SS <- as.character(dat2001$SS) #n=20765
 rm(samprast2001)
 
 QCPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2011_v4.csv") #n=555611
@@ -65,7 +68,7 @@ brtplot <- function (j) {
   pdf(paste(w,speclist[j],"_plot5.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(qbs2011_1km, brt1, type="response", n.trees=brt1$n.trees)
+  rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
   writeRaster(rast, filename=paste(w,speclist[j],"_pred1km5",sep=""), format="GTiff",overwrite=TRUE)
   
   q99 <- quantile(rast, probs=c(0.99))	
@@ -91,8 +94,9 @@ for (j in 1:length(speclist)) {
   dat1 <- right_join(specdat2001x,survey2001[,1:3],by=c("SS","PKEY")) 
   dat1$SPECIES <- as.character(speclist[j])
   dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND)) 
-  s2001 <- left_join(dat1,specoff, by=c("SPECIES","PKEY"))
-  d2001 <- left_join(s2001, dat_2001, by=c("SS")) 
+  dat11 <- distinct(dat1,SS,.keep_all=TRUE) #randomly select one survey for analysis
+  s2001 <- left_join(dat11,specoff, by=c("SPECIES","PKEY"))
+  d2001 <- left_join(s2001, dat2001, by=c("SS")) 
   
   specdat2011 <- filter(QCPC2011, SPECIES == as.character(speclist[j])) 
   specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS), FUN=sum)
@@ -100,15 +104,15 @@ for (j in 1:length(speclist)) {
   dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
   dat2$SPECIES <- as.character(speclist[j])
   dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
-  s2011 <- left_join(dat2,specoff, by=c("SPECIES","PKEY"))
-  d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
-  d2011 <- na.omit(d2011) #eliminate non-Quebec data 
+  dat22 <- distinct(dat2,SS,.keep_all=TRUE) #randomly select one survey for analysis
+  s2011 <- left_join(dat22,specoff, by=c("SPECIES","PKEY"))
+  d2011 <- left_join(s2011, dat2011, by=c("SS")) 
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo)
-  datcombo$wat <- as.factor(datcombo$wat)
+  datcombo$water <- as.factor(datcombo$wat)
   datcombo$urbag <- as.factor(datcombo$urbag)
   datcombo$lf <- as.factor(datcombo$lf)
+  datcombo <- na.omit(datcombo)
 
   # Beaudoin covariates for model 
   # Species_Abie_Bal_v1                                                                                    

@@ -41,7 +41,7 @@ ss <- cbind(ss,"roughness"=extract(roughness,as.matrix(cbind(ss$X,ss$Y))))
 # topoquebec <- crop(topo,quebec)
 # topoquebec <- resample(topoquebec,quebec)
 # writeRaster(topoquebec,file="G:/Boreal/NationalModelsV2/quebec/topo.grd")
-# topoquebec <- brick("G:/Boreal/NationalModelsV2/quebec/topo.grd")
+topoquebec <- brick("G:/Boreal/NationalModelsV2/quebec/topo.grd")
 
 #Beaudoin biomass and landscape proportion, LCC projection
 b2011 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
