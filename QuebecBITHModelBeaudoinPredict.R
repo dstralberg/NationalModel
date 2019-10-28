@@ -86,7 +86,7 @@ brtplot <- function (brt1) {
    write.csv(varimp,file=paste(w,"BITHvarimp5.csv",sep=""))
    cvstats <- t(as.data.frame(brt1$cv.statistics))
    write.csv(cvstats,file=paste(w,"BITHcvstats5.csv",sep=""))
-   pdf(paste(w,"BITH_plot4.pdf",sep=""))
+   pdf(paste(w,"BITH_plot5.pdf",sep=""))
    gbm.plot(brt1,n.plots=12,smooth=TRUE)
    dev.off()
    rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
@@ -95,7 +95,7 @@ brtplot <- function (brt1) {
    #q99 <- quantile(rast, probs=c(0.99))
    # prev <- cellStats(rast, 'mean')
    # max <- 3*prev
-   png(file=paste(w,"BITH_pred1km4.png",sep=""), height=600, width=850)
+   png(file=paste(w,"BITH_pred1km5.png",sep=""), height=600, width=850)
    par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
    par(mar=c(0,0,5,0))
    plot(rast, col="blue", axes=FALSE, legend=FALSE, main="BITH current prediction")
@@ -110,19 +110,20 @@ specdat2001x <- aggregate(specdat2001$ABUND,by=list("PKEY"=specdat2001$PKEY,"SS"
 names(specdat2001x)[3] <- "ABUND"
 dat1 <- right_join(specdat2001x,survey2001[,1:3],by=c("SS","PKEY")) 
 dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND))
-d2001 <- left_join(dat1, dat_2001, by=c("SS"))
-d2001 <- na.omit(d2001) #eliminate non-Quebec data 
+dat11 <- distinct(dat1,SS,.keep_all=TRUE) #randomly select one survey for analysis
+d2001 <- left_join(dat11, dat_2001, by=c("SS"))
   
 specdat2011 <- filter(PC2011, SPECIES == "BITH") 
 specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS), FUN=sum)
 names(specdat2011x)[3] <- "ABUND"  
 dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
 dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
-d2011 <- left_join(dat2, dat_2011, by=c("SS")) 
-d2011 <- na.omit(d2011) #eliminate non-Quebec data 
+dat22 <- distinct(dat2,SS,.keep_all=TRUE) #randomly select one survey for analysis
+d2011 <- left_join(dat22, dat_2011, by=c("SS")) 
+
 datcombo <- rbind(d2001,d2011)
 datcombo <- na.omit(datcombo) #n=78923
-datcombo$wat <- as.factor(datcombo$wat)
+datcombo$water <- as.factor(datcombo$wat)
 datcombo$urbag <- as.factor(datcombo$urbag)
 datcombo$lf <- as.factor(datcombo$lf)
 datcombo$ABUND <- ifelse(datcombo$ABUND>0,1,0)
@@ -166,7 +167,7 @@ x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,4
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
     x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,196,197,198,199,200,201,202,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,"BITHbrtQ54.R",sep=""))
+      save(brt1,file=paste(w,"BITHbrtQC5.R",sep=""))
       brtplot(brt1)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
