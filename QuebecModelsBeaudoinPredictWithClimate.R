@@ -44,6 +44,9 @@ speclist <- speclist[,1]
 qbs2011_1km <- brick("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
 r2 <- qbs2011_1km[[1]]
 
+combo2011 <- brick("G:/Boreal/NationalModelsV2/quebec/combo2011.grd")
+names(combo2011)[191:194] <- c("TPI","TRI","slope","roughness")
+
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 quebec <- raster("E:/GIS/basemaps/quebec250m1.tif")
 cur <- "E:/CMIP5/baseline19812010/"
@@ -52,67 +55,45 @@ clim <- list.files(cur, pattern =".asc$")
 curclim<-stack(clim)
 qclim <- crop(curclim,quebec)
 projection(qclim) <- LCC
-qclima <- resample(qclim,r2)
-pred <- stack(qbs2011_1km,qclima)
+qclima <- resample(qclim,combo2011[[1]])
+pred <- stack(combo2011,qclima)
 
-offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
-offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")
-offlc <- rbind(offl[2:4],offla[2:4])
-offlc$PKEY <- as.character(offlc$PKEY)
-offlc$SPECIES <- as.character(offlc$SPECIES)
-rm(offla,offl)
-
-dat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCdat2001.csv") #n=20765
-dat2001 <- dat2001[,c(1:2,48:146,149)]
-dat2001$PCODE <- as.character(dat2001$PCODE)
+dat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2001_v4.csv") #n=5474
 dat2001$SS <- as.character(dat2001$SS)
-dat_2001 <- dat2001
 
-dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCdat2011.csv") #n=20765
-dat2011 <- dat2011[,c(1:2,48:146,149)]
-dat2011$PCODE <- as.character(dat2011$PCODE)
+dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2011_v4.csv") #n=38481
 dat2011$SS <- as.character(dat2011$SS)
-adat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCAtlasdat2011.csv") #n=31456
-adat2011 <- adat2011[,c(1:2,6:104,107)]
-adat2011$PCODE <- as.character(adat2011$PCODE)
-adat2011$SS <- as.character(adat2011$SS)
-
-d2011 <- rbind(dat2011,adat2011) #n=52221
-dat_2011 <- d2011[!duplicated(d2011[, 1:2]), ] #n=41963
 
 #calculating sample weights as inverse of number of survey points within 5x5 pixel radius
-samprast2011 <- rasterize(cbind(dat_2011$X,dat_2011$Y), r2, field=1)
+samprast2011 <- rasterize(cbind(dat2011$X,dat2011$Y), r2, field=1, fun='sum')
 gf <- focalWeight(samprast2011, 25, "Gauss")
 sampsum25 <- focal(samprast2011, w=gf, na.rm=TRUE)
-dat_2011 <- cbind(dat_2011,extract(sampsum25,as.matrix(cbind(dat_2011$X,dat_2011$Y))))
-names(dat_2011)[ncol(dat_2011)] <- "sampsum25"
-dat_2011$wt <- 1/dat_2011$sampsum25
-dat_2011$SS <- as.character(dat_2011$SS) #n=42210
+dat2011 <- cbind(dat2011,extract(sampsum25,as.matrix(cbind(dat2011$X,dat2011$Y))))
+names(dat2011)[ncol(dat2011)] <- "sampsum25"
+dat2011$wt <- 1/dat2011$sampsum25
+dat2011$SS <- as.character(dat2011$SS) #n=42210
 rm(samprast2011)
-dat_2011 <- cbind(dat_2011, extract(qclima,as.matrix(cbind(dat_2011$X,dat_2011$Y))))
+dat_2011 <- cbind(dat2011, extract(qclima,as.matrix(cbind(dat2011$X,dat_2011$Y))))
 
-samprast2001 <- rasterize(cbind(dat_2001$X,dat_2001$Y), r2, field=1)
+samprast2001 <- rasterize(cbind(dat2001$X,dat2001$Y), r2, field=1, fun='sum')
 gf <- focalWeight(samprast2001, 25, "Gauss")
 sampsum25 <- focal(samprast2001, w=gf, na.rm=TRUE)
-dat_2001 <- cbind(dat_2001,extract(sampsum25,as.matrix(cbind(dat_2001$X,dat_2001$Y))))
-names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
-dat_2001$wt <- 1/dat_2001$sampsum25
-dat_2001$SS <- as.character(dat_2001$SS) #n=20765
+dat2001 <- cbind(dat2001,extract(sampsum25,as.matrix(cbind(dat2001$X,dat2001$Y))))
+names(dat2001)[ncol(dat2001)] <- "sampsum25"
+dat2001$wt <- 1/dat2001$sampsum25
+dat2001$SS <- as.character(dat2001$SS) #n=20765
 rm(samprast2001)
-dat_2001 <- cbind(dat_2001, extract(qclima,as.matrix(cbind(dat_2001$X,dat_2001$Y))))
+dat_2001 <- cbind(dat2001, extract(qclima,as.matrix(cbind(dat2001$X,dat_2001$Y))))
 
-APC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/AtlasPC2011.csv")
-QCPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2011.csv")
-QCPC2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2001.csv") #n=212901
+QCPC2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2011_v4.csv") #n=555611
+QCPC2011$PKEY <- as.character(QCPC2011$PKEY)
+QCPC2011$SS <- as.character(QCPC2011$SS)
+QCPC2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2001_v4.csv") #n=209163
 QCPC2001$PKEY <- as.character(QCPC2001$PKEY)
 QCPC2001$SS <- as.character(QCPC2001$SS)
-PC2011 <- rbind(APC2011[,1:4],QCPC2011[,1:4]) #n=881579
-PC2011 <- distinct(PC2011) #n=828646
-PC2011$PKEY <- as.character(PC2011$PKEY)
-PC2011$SS <- as.character(PC2011$SS)
 
-survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=26161
-survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS), FUN=sum) #n=89289
+survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=25646
+survey2011 <- aggregate(QCPC2011$ABUND, by=list("PKEY"=QCPC2011$PKEY,"SS"=QCPC2011$SS), FUN=sum) #n=51916
 
 w <- "G:/Boreal/NationalModelsV2/Quebec/"
 setwd(w)

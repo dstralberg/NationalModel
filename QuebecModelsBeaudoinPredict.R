@@ -15,6 +15,11 @@ r2 <- qbs2011_1km[[1]]
 
 combo2011 <- brick("G:/Boreal/NationalModelsV2/quebec/combo2011.grd")
 names(combo2011)[191:194] <- c("TPI","TRI","slope","roughness")
+lf <- raster("G:/Boreal/NationalModelsV2/quebec/landform.grd")
+combo2011 <- addLayer(combo2011,lf)
+names(combo2011)[195] <- "lf"
+
+provcrop <- crop(provstate, combo2011[[1]])
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 offlc <- read.csv("G:/Boreal/NationalModelsV2/quebec/QCoffsets_v4.csv")
@@ -51,6 +56,7 @@ QCPC2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCPC2001_v4.csv") #n=209
 QCPC2001$PKEY <- as.character(QCPC2001$PKEY)
 QCPC2001$SS <- as.character(QCPC2001$SS)
 
+QCPC <- rbind(QCPC2001,QCPC2011)
 
 survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=25646
 survey2011 <- aggregate(QCPC2011$ABUND, by=list("PKEY"=QCPC2011$PKEY,"SS"=QCPC2011$SS), FUN=sum) #n=51916
@@ -59,28 +65,47 @@ w <- "G:/Boreal/NationalModelsV2/Quebec/"
 setwd(w)
 
 #generate predictions and plots from models
-brtplot <- function (j) {
-  load(paste(w,speclist[j],"brtQC5.R",sep=""))
+brtplot <- function (j,PC) {
+  load(paste(w,speclist[j],"brtQC6.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
-  write.csv(varimp,file=paste(w,speclist[j],"varimp5.csv",sep=""))
-  cvstats <- t(as.data.frame(brt1$cv.statistics))
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats5.csv",sep=""))
-  pdf(paste(w,speclist[j],"_plot5.pdf",sep=""))
+  write.csv(varimp,file=paste(w,speclist[j],"varimp6.csv",sep=""))
+  cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
+  cvstats$deviance.null <- brt1$self.statistics$mean.null
+  cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
+  write.csv(cvstats,file=paste(w,speclist[j],"cvstats6.csv",sep=""))
+  pdf(paste(w,speclist[j],"_plot6.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km5",sep=""), format="GTiff",overwrite=TRUE)
+  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km6",sep=""), format="GTiff",overwrite=TRUE)
   
   q99 <- quantile(rast, probs=c(0.99))	
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km5.png",sep=""), height=600, width=850)
+  png(file=paste(w,speclist[j],"_pred1km6.png",sep=""), height=800, width=710)
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=paste(as.character(speclist[j]),", 1961-1990"), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.5))
-  plot(provstate, col="gray", add=TRUE)
-  text(2400000,7950000,"Potential density (males/ha)", cex=1.3)
+  plot(provcrop, col="gray", add=TRUE)
+  text(2150000,7950000,"Potential density (males/ha)", cex=1.3)
+  dev.off()
+  
+  PC1 <- PC[PC$ABUND>0,]
+  xy1 <- PC1[,c(6,7)]
+  spdf1 <- SpatialPointsDataFrame(coords = xy1, data = PC1, proj4string = LCC)
+  PC2 <- PC[PC$ABUND==0,]
+  xy2 <- PC2[,c(6,7)]
+  spdf2 <- SpatialPointsDataFrame(coords = xy2, data = PC2, proj4string = LCC)
+  png(file=paste(w,speclist[j],"_pred1km6_pts.png",sep=""), width=710, height=800)
+  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
+  par(mar=c(0,0,5,0))
+  plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
+  plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
+  plot(spdf2, col = 'black', pch=1, cex=0.2, add = TRUE)
+  plot(spdf1, col = 'red', pch=1, cex=PC1$ABUND, add = TRUE)
+  plot(provcrop, col="gray", add=TRUE)
+  text(2150000,7950000,"Potential density (males/ha)", cex=1.3)
   dev.off()
 }
 
@@ -107,6 +132,9 @@ for (j in 1:length(speclist)) {
   dat22 <- distinct(dat2,SS,.keep_all=TRUE) #randomly select one survey for analysis
   s2011 <- left_join(dat22,specoff, by=c("SPECIES","PKEY"))
   d2011 <- left_join(s2011, dat2011, by=c("SS")) 
+  
+  PC <- rbind(dat11,dat22)
+  PC <- left_join(PC,QCPC[,c(1,4,7,8)],by=c("PKEY", "SS"))
 
   datcombo <- rbind(d2001,d2011)
   datcombo$water <- as.factor(datcombo$wat)
@@ -140,27 +168,25 @@ for (j in 1:length(speclist)) {
   # led750
   # water
   # urbag
-  # TPI
-  # TRI
-  # slope
+  # landform
   # roughness
 
-  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,198,199,200,201,202,203,204,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w,speclist[j],"brtQC5.R",sep=""))
-    brtplot(j)
+    save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+    brtplot(j,PC)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,198,199,200,201,202,203,204,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,speclist[j],"brtQC5.R",sep=""))
-      brtplot(j)
+      save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+      brtplot(j,PC)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,198,199,200,201,202,203,204,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
-        save(brt1,file=paste(w,speclist[j],"brtQC5.R",sep=""))
-        brtplot(j)
+        save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+        brtplot(j,PC)
       }  
     }
   gc()

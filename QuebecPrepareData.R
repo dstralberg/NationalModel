@@ -19,19 +19,19 @@ SSQCdf <- as.data.frame(SSQC)
 
 coordinates(SSQC) <- c("X", "Y") 
 proj4string(SSQC) <- LCC
-ss <- as.data.frame(spTransform(SSQC, lazea))
-ss$SS <- as.character(ss$SS)
-
-#Landform (100-m) Lazea projection
-TPI <- raster("E:/GIS/topoedaphic/TPI.tif")
-TRI <- raster("E:/GIS/topoedaphic/TRI.tif")
-slope <- raster("E:/GIS/topoedaphic/slope.tif")
-roughness <- raster("E:/GIS/topoedaphic/roughness.tif")
-
-ss <- cbind(ss,"TPI"=extract(TPI,as.matrix(cbind(ss$X,ss$Y))))
-ss <- cbind(ss,"TRI"=extract(TRI,as.matrix(cbind(ss$X,ss$Y))))
-ss <- cbind(ss,"slope"=extract(slope,as.matrix(cbind(ss$X,ss$Y))))
-ss <- cbind(ss,"roughness"=extract(roughness,as.matrix(cbind(ss$X,ss$Y))))
+# ss <- as.data.frame(spTransform(SSQC, lazea))
+# ss$SS <- as.character(ss$SS)
+# 
+# #Landform (100-m) Lazea projection
+# TPI <- raster("E:/GIS/topoedaphic/TPI.tif")
+# TRI <- raster("E:/GIS/topoedaphic/TRI.tif")
+# slope <- raster("E:/GIS/topoedaphic/slope.tif")
+# roughness <- raster("E:/GIS/topoedaphic/roughness.tif")
+# 
+# ss <- cbind(ss,"TPI"=extract(TPI,as.matrix(cbind(ss$X,ss$Y))))
+# ss <- cbind(ss,"TRI"=extract(TRI,as.matrix(cbind(ss$X,ss$Y))))
+# ss <- cbind(ss,"slope"=extract(slope,as.matrix(cbind(ss$X,ss$Y))))
+# ss <- cbind(ss,"roughness"=extract(roughness,as.matrix(cbind(ss$X,ss$Y))))
 
 # TPI <- raster("E:/GIS/topoedaphic/TPI250.tif")
 # TRI <- raster("E:/GIS/topoedaphic/TRI250.tif")
@@ -56,7 +56,7 @@ bs2011_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2011_750.grd")
 names(bs2011_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Species","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Structure","Landsc750",names(bs2011_Gauss750))
-names(bs2011_Gauss750) <- gsub("Landcover","Landsc750",names(bs2011_Gauss750))
+names(bs2011_Gauss750) <- gsub("LandCover","Landsc750",names(bs2011_Gauss750))
 bs2011quebec_Gauss750 <- crop(bs2011_Gauss750,quebec)
 bs2011quebec_Gauss750 <- mask(bs2011quebec_Gauss750,quebec)
 
@@ -72,7 +72,7 @@ bs2001_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2001_750.grd")
 names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
-names(bs2001_Gauss750) <- gsub("Landcover","Landsc750",names(bs2001_Gauss750))
+names(bs2001_Gauss750) <- gsub("LandCover","Landsc750",names(bs2001_Gauss750))
 bs2001quebec_Gauss750 <- crop(bs2001_Gauss750,quebec)
 bs2001quebec_Gauss750 <- mask(bs2001quebec_Gauss750,quebec)
 
@@ -106,7 +106,11 @@ writeRaster(combo2011,file="G:/Boreal/NationalModelsV2/quebec/combo2011.grd", ov
 combo2001 <- stack(bs2001quebec,bs2001quebec_Gauss750,lcquebec,topoquebec)
 writeRaster(combo2001,file="G:/Boreal/NationalModelsV2/quebec/combo2001.grd", overwrite=TRUE)
 
-lf <- raster("E:/GIS/topoedaphic/lf1k.tif")
+# lf <- raster("E:/GIS/topoedaphic/lf1k.tif")
+# lf <- raster("E:/GIS/topoedaphic/NA_Topo/lf_lcc1.tif")
+# lf1 <- resample(lf,quebec,method="ngb")
+# writeRaster(lf1,file="G:/Boreal/NationalModelsV2/quebec/landform.grd")
+lf1 <- raster("G:/Boreal/NationalModelsV2/quebec/landform.grd")
 
 #Road (on/off)
 road <- raster("G:/Boreal/NationalModelsV2/roadonoff1.tif")
@@ -120,13 +124,13 @@ dat2011 <-cbind(dat2011, extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "nalc"
 dat2011 <- cbind(dat2011, extract(rrc,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "rrc"
-dat2011 <- cbind(dat2011, extract(lf,as.matrix(cbind(dat2011$X,dat2011$Y))))
+dat2011 <- cbind(dat2011, extract(lf1,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "lf"
-dat2011 <- cbind(dat2011, extract(quebeclc,as.matrix(cbind(dat2011$X,dat2011$Y))))
-dat_2011 <- merge(as.data.frame(dat2011)[,1:ncol(dat2011)], ss[,c(1,4:7)], by=c("SS")) #n=41554
-dat_2011 <- na.omit(dat_2011) #n=40994
+dat2011 <- cbind(dat2011, extract(lcquebec,as.matrix(cbind(dat2011$X,dat2011$Y))))
+dat2011 <- cbind(dat2011, extract(topoquebec,as.matrix(cbind(dat2011$X,dat2011$Y)))) #n=41092
+dat_2011 <- na.omit(dat2011) #n=40815
 dat_2011 <- inner_join(dat_2011, PKEYcombo[,2:3], by=c("SS")) #n=88747
-dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:(ncol(dat_2011)-1)]) #n=38256
+dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:(ncol(dat_2011)-1)]) #n=38748
 write.csv(dat_2011,"G:/Boreal/NationalModelsV2/quebec/quebec_dat2011_v4.csv",row.names=FALSE)
 
 dat2001 <- cbind(SSQCdf, extract(bs2001quebec,as.matrix(cbind(SSQCdf$X,SSQCdf$Y))))
@@ -135,13 +139,13 @@ dat2001 <-cbind(dat2001, extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "nalc"
 dat2001 <- cbind(dat2001, extract(rrc,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "rrc"
-dat2001 <- cbind(dat2001, extract(lf,as.matrix(cbind(dat2001$X,dat2001$Y))))
+dat2001 <- cbind(dat2001, extract(lf1,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "lf"
-dat2001 <- cbind(dat2001, extract(quebeclc,as.matrix(cbind(dat2001$X,dat2001$Y))))
-dat_2001 <- merge(as.data.frame(dat2001)[,1:ncol(dat2001)], ss[,c(1,4:7)], by=c("SS")) #n=41554
-dat_2001 <- na.omit(dat_2001) #n=40994
-dat_2001 <- inner_join(dat_2001, PKEYcombo[,2:3], by=c("SS")) #n=88747
-dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:(ncol(dat_2001)-1)]) #n=38256
+dat2001 <- cbind(dat2001, extract(lcquebec,as.matrix(cbind(dat2001$X,dat2001$Y))))
+dat2001 <- cbind(dat2001, extract(topoquebec,as.matrix(cbind(dat2001$X,dat2001$Y)))) #41092
+dat_2001 <- na.omit(dat2001) #n=40815
+dat_2001 <- inner_join(dat_2001, PKEYcombo[,2:3], by=c("SS")) #n=88914
+dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:(ncol(dat_2001)-1)]) #n=5495
 write.csv(dat_2001,"G:/Boreal/NationalModelsV2/quebec/quebec_dat2001_v4.csv",row.names=FALSE)
 
 PCcombo$PKEY <- as.character(PCcombo$PKEY)

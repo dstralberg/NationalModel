@@ -3,15 +3,15 @@ library(ggplot2)
 library(maptools)
 library(dplyr)
 
-w <-"G:/Boreal/NationalModelsV2/March2019/rasters/"
-x <-"G:/Boreal/NationalModelsV2/March2019/mosaicpred/"
-specpred <- list.files(w,pattern=".tif$")
-bcr <- shapefile("F:/GIS/basemaps/BCRs/bcrfinallcc.shp")
+w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Nov2019/"
+x <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus//NationalModels/Nov2019/mosaics/"
+specpred <- list.files(x,pattern=".tif$")
+bcr <- shapefile("E:/GIS/basemaps/BCRs/bcrfinallcc.shp")
 bcrlu <- unique(as.data.frame(bcr[,c(5,7)]))
-canada <- shapefile("F:/GIS/basemaps/canadaLCC.shp")
+canada <- shapefile("E:/GIS/basemaps/canadaLCC.shp")
 bcrcan <- crop(bcr,canada)
-landcov <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
-setwd(w)
+landcov <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+setwd(x)
 a<- raster(specpred[1])
 # lc <- crop(landcov,a)
 # lcr <- resample(lc,a,method='ngb')
@@ -56,17 +56,17 @@ sumdens <- function (models,landcov,units){
     densmean$spec <- spec
     densmean <- merge(densmean,lc1[,c(1,2,5,6)],by=c("BCR","nalc"))
     densmean <- merge(densmean,lu,by="nalc")
-    write.csv(densmean,file=paste(x,spec,"_densities.csv",sep=""),row.names=FALSE)
+    write.csv(densmean,file=paste(w,"densities/",spec,"_densities.csv",sep=""),row.names=FALSE)
     denstable <- rbind(denstable,densmean)
   }
 }
-write.csv(denstable,file=paste(x,"denstable,csv",sep=""),row.names=FALSE)
+write.csv(denstable,file=paste(x,"/densities/denstable,csv",sep=""),row.names=FALSE)
 
 plotdens <- function (models,landcov,units){
 for (i in 1:length(models)){
   spec <- substr(models[i],8,11)  
   densmean <- read.csv(paste(w,spec,"_densities.csv",sep=""))
-  png(filename=paste(w,spec,"_densityplot.png",sep=""),width=1800,height=1800,res=216)
+  png(filename=paste(w,"densities/",spec,"_densityplot.png",sep=""),width=1800,height=1800,res=216)
   p<-ggplot(densmean,aes(x=landcover,y=mean))+
     geom_bar(aes(fill=landcover),width=densmean$areaprop*2, stat="identity")+
     xlab("Land cover type")+
@@ -93,7 +93,7 @@ for (i in 1:length(models)){
   names(pred1) <- c("BCR","nalc","pred")
   #pred1$lcv <- as.factor(pred1$lcv)
   pred1 <- left_join(pred1,lu)
-  png(filename=paste(x,spec,"_boxplot.png",sep=""),width=2200,height=1800,res=216)
+  png(filename=paste(w,"densities/",spec,"_boxplot.png",sep=""),width=2200,height=1800,res=216)
   p<-ggplot(pred1,aes(x=landcover,y=pred))+
     geom_boxplot()+
     xlab("Land cover type")+

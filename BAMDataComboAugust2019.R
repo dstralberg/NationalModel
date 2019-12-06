@@ -2,10 +2,14 @@ library(raster)
 library(maptools)
 library(dplyr)
 library(plyr)
-library(data.table)
+library(tidyr)
+#library(data.table)
 library(reshape2)
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+
+PCBBS <- read.delim("F:/BAM/BAMData/BBS/BBS_ptcount_to2017.txt",sep=",",header=TRUE)
+names(PCBBS) <- c("SS", "PKEY", "SPECIES","dur","dis","BEHAVIOUR","ABUND","OLD_SPECIES")
 
 load("F:/BAM/BAMData/data_package_2016-04-18.Rdata")	
 load("F:/BAM/BAMData/offsets-v3_2016-04-18.Rdata")
@@ -97,9 +101,41 @@ SScombo <- unique(SScombo, by="SS") #n=288662
 #SScombo <- unique(SScombo, by=c("X","Y"))
 PKEYcombo <- rbind(PKEYBAM[,c(1,2,8,27)],PKEYAtlas[,c(1,2,4,29)],PKEYWT,PKEYBU2) #n=1033315 (19424 duplicates)
 PKEYcombo <- unique(PKEYcombo, by="PKEY") #n=1013891
-PCcombo <- rbind(PCBAM[,c(2:7)], PCAtlas[,c(2:5,7:8)])
+PCcombo <- rbind(PCBAM[,c(2:7)], PCAtlas[,c(2:5,7:8)], PCBBS[,c(1:5,7)])
 PCcombo <- unique(PCcombo)
 PCcombo <- rbind(PCcombo[,2:4],PCWT, PCBU2)
+
+PCmatch <- left_join(PCcombo,PKEYcombo,by="PKEY")
+PCnomatch <- PCmatch[is.na(PCmatch$SS),]
+PCsplitnomatch <- separate(data = PCnomatch, col = PKEY, into = c("PCODE", "Transect1","Transect2","Point","Visit"), sep = "\\:")
+unique(PCsplitnomatch$PCODE)
+#[1] "CL"    "BBSWT" "BBSWA" "BBSYT" "BBSAB" "BBSAK" "BBSDE" "BBSBC" "BBSCT" "BBSID" "BBSIL" "BBSIN"
+#[13] "BBSME" "BBSMB" "BBSNT" "USMT"  "USMI"  "USMN"  "CANB"  "CANL"  "BBSNJ" "BBSNH" "BBSNY" "BBSND"
+#[25] "BBSOH" "BBSNS" "BBSNU" "BBSON"
+
+PCmatch <- na.omit(PCmatch)
+
+PKEYmatch <- left_join(PKEYcombo,PCcombo,by="PKEY")
+PKEYnomatch <- PKEYmatch[is.na(PKEYmatch$ABUND),]
+PKEYnomatch <- unique(PKEYnomatch[,1:4])
+PKEYsplitnomatch <- separate(data = PKEYnomatch, col = PKEY, into = c("PCODE", "Transect","Point","Year","Visit"), sep = "\\:")
+unique(PKEYsplitnomatch$PCODE)
+# [1] "ABCAWAWEST"  "AK_YC"       "AKALMS_DIST" "AKCAFS"      "AKDEN"       "AKOR"       
+# [7] "AKOR_CNT"    "ALMS"        "BR"          "CF"          "CHSS"        "CL"         
+# [13] "CLSS"        "COCL"        "COMW"        "CW"          "DRAP"        "EHPP"       
+# [19] "EM"          "EMB-BS"      "EMCLA"       "EMCLA2014"   "FLPC"        "GPMN"       
+# [25] "HEDW"        "HOBBBS"      "HR"          "IMBE"        "JL"          "KH"         
+# [31] "KTPC"        "LP"          "LR"          "MB06"        "MC"          "ML"         
+# [37] "MM94"        "MM95"        "MNBBA"       "MNNFB"       "NLCTRLAB"    "NLLR"       
+# [43] "NLMR"        "NWSS"        "PA"          "PF"          "PN"          "PR"         
+# [49] "QCATLAS"     "ROMA"        "RP"          "SC"          "SNPC"        "SRDR"       
+# [55] "THIN"        "WAP"         "WF"          "WH"          "WR"          "YKFL"       
+# [61] "YKRIPARIAN"  "YKSW"        "YKTeslin"    "BBSAB"       "BBSAK"       "BBSBC"      
+# [67] "BBSMB"       "BBSMI"       "BBSMN"       "BBSMT"       "BBSNB"       "BBSNL"      
+# [73] "BBSNM"       "BBSNS"       "BBSNT"       "BBSNU"       "BBSON"       "BBSPEI"     
+# [79] "BBSQC"       "BBSSD"       "BBSSK"       "BBSVT"       "BBSWI"       "BBSYK"   
+PKEYmatch <- unique(PKEYmatch[,1:4])
+PKEYmatch <- na.omit(PKEYmatch)
 
 rm(dd)
 rm(off)
@@ -112,6 +148,7 @@ rm(PCAtlas)
 rm(PCWT)
 rm(PCBU)
 rm(PCBU2)
+rm(PCBBS)
 rm(YY)
 rm(y)
 rm(SSBU)
@@ -132,5 +169,10 @@ rm(PCTBL)
 rm(PKEYAtlas)
 rm(PKEYWT)
 
-save.image(file="F:/BAM/BAMData/BAM_data_package_August2019.RData")
-write.csv(PKEYcombo, file="F:/BAM/BAMData/BAM_data_package_August2019_PKEYs.csv")
+save.image(file="F:/BAM/BAMData/BAM_data_package_November2019.RData")
+write.csv(PKEYmatch, file="F:/BAM/BAMData/BAM_data_package_November2019_PKEYmatch.csv")
+write.csv(PKEYnomatch, file="F:/BAM/BAMData/BAM_data_package_November2019_PKEYnomatch.csv")
+write.csv(PCnomatch, file="F:/BAM/BAMData/BAM_data_package_November2019_PCnomatch.csv")
+write.csv(PCmatch, file="F:/BAM/BAMData/BAM_data_package_November2019_PCmatch.csv")
+
+

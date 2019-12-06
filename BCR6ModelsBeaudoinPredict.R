@@ -5,7 +5,6 @@ library(maptools)
 library(dplyr)
 
 bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
-provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- shapefile("G:/Boreal/NationalModelsV2/BCR6/bcr6.shp")
@@ -150,11 +149,11 @@ mapplot <- function (j) {
 }
 
 cvstatsum <- function (speclist) {
-  cvstats <- read.csv(paste(w,speclist[1],"cvstats4.csv",sep=""))
+  cvstats <- read.csv(paste(w,speclist[1],"cvstats5.csv",sep=""))
   cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
   names(cvstatmean) <- c("stat",as.character(speclist[1]))
   for (j in 2:length(speclist)) {
-    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats4.csv",sep="")))
+    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats5.csv",sep="")))
     if(class(x) != "try-error") {
       cvstatmean <- as.data.frame(cbind(cvstatmean,rowMeans(cv2[,2:6])))
       names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
@@ -220,9 +219,9 @@ for (j in 1:length(speclist)) {
 }
 
 for (j in 1:length(speclist)) {
-  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km4.tif",sep="")))
+  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
   if (class(x1) == "try-error") {
-    x1 <- try(load(paste(w,speclist[j],"brt4.R",sep="")))
+    x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
     if (class(x1) != "try-error") {
       brtplot(j)
     }
@@ -231,11 +230,11 @@ for (j in 1:length(speclist)) {
 
 #redo maps
 for (j in 1:length(speclist)) {
-  x1 <- try(load(paste(w,speclist[j],"brt4.R",sep="")))
+  x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
   if (class(x1) != "try-error") {
     mapplot(j)
   }
 }
 
 cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w,"_cvstats4.csv",sep=""))
+write.csv(cvstats,file=paste(w,"_cvstats5.csv",sep=""))

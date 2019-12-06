@@ -22,7 +22,7 @@ bdat2001 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCBITHdat2001.csv") #n=9
 bdat2001$SS <- as.character(bdat2001$SS)
 bdat_2001 <- bdat2001
 
-d2001 <- rbind(dat2001,bdat2001) #n=23219
+d2001 <- rbind(dat2001[,1:200],bdat2001) #n=23219
 dat_2001 <- d2001[!duplicated(d2001[, 1]), ] #n=23034
 
 dat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/quebec_dat2011_v4.csv") #n=38256
@@ -31,7 +31,7 @@ bdat2011 <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCBITHdat2011.csv") #n=1
 bdat2011$SS <- as.character(bdat2011$SS)
 bdat_2011 <- bdat2011
 
-d2011 <- rbind(dat2011,bdat2011) #n=39596
+d2011 <- rbind(dat2011[,1:200],bdat2011) #n=39596
 dat_2011 <- d2011[!duplicated(d2011[, 1]), ] #n=39569
 
 #calculating sample weights as inverse of number of survey points within 5x5 pixel radius
@@ -92,10 +92,7 @@ brtplot <- function (brt1) {
    rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
    writeRaster(rast, filename=paste(w,"BITH_pred1km5",sep=""), format="GTiff",overwrite=TRUE)
 
-   #q99 <- quantile(rast, probs=c(0.99))
-   # prev <- cellStats(rast, 'mean')
-   # max <- 3*prev
-   png(file=paste(w,"BITH_pred1km5.png",sep=""), height=600, width=850)
+   png(file=paste(w,"BITH_pred1km5.png",sep=""), height=800, width=710)
    par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
    par(mar=c(0,0,5,0))
    plot(rast, col="blue", axes=FALSE, legend=FALSE, main="BITH current prediction")
@@ -154,24 +151,22 @@ datcombo$ABUND <- ifelse(datcombo$ABUND>0,1,0)
   # led750
   # water
   # urbag
-  # TPI
-  # TRI
-  # slope
+  # landcover
   # roughness
 
-x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,196,197,198,199,200,201,202,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
+x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,195,196,197,198,199,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
     save(brt1,file=paste(w,"BITHbrtQC5.R",sep=""))
     brtplot(brt1)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,196,197,198,199,200,201,202,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
+    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,195,196,197,198,199,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
       save(brt1,file=paste(w,"BITHbrtQC5.R",sep=""))
       brtplot(brt1)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,196,197,198,199,200,201,202,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
+      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(12,18,20,26,27,33,34,42,50,51,52,56,60,62,64,67,74,78,81,94,95,195,196,197,198,199,203), family = "bernoulli", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
         save(brt1,file=paste(w,"BITHbrtQC5.R",sep=""))
         brtplot(brt1)
