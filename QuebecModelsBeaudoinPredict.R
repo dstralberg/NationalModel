@@ -66,23 +66,23 @@ setwd(w)
 
 #generate predictions and plots from models
 brtplot <- function (j,PC) {
-  load(paste(w,speclist[j],"brtQC6.R",sep=""))
+  load(paste(w,speclist[j],"brtQC7.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
   write.csv(varimp,file=paste(w,speclist[j],"varimp6.csv",sep=""))
   cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
   cvstats$deviance.null <- brt1$self.statistics$mean.null
   cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats6.csv",sep=""))
+  write.csv(cvstats,file=paste(w,speclist[j],"cvstats7.csv",sep=""))
   pdf(paste(w,speclist[j],"_plot6.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km6",sep=""), format="GTiff",overwrite=TRUE)
+  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km7",sep=""), format="GTiff",overwrite=TRUE)
   
   q99 <- quantile(rast, probs=c(0.99))	
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km6.png",sep=""), height=800, width=710)
+  png(file=paste(w,speclist[j],"_pred1km7.png",sep=""), height=800, width=710)
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -97,7 +97,7 @@ brtplot <- function (j,PC) {
   PC2 <- PC[PC$ABUND==0,]
   xy2 <- PC2[,c(6,7)]
   spdf2 <- SpatialPointsDataFrame(coords = xy2, data = PC2, proj4string = LCC)
-  png(file=paste(w,speclist[j],"_pred1km6_pts.png",sep=""), width=710, height=800)
+  png(file=paste(w,speclist[j],"_pred1km7_pts.png",sep=""), width=710, height=800)
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -164,6 +164,27 @@ for (j in 1:length(speclist)) {
   # Species_Tsug_Can_v1                                                                                 
   # Structure_Biomass_TotalLiveAboveGround_v1
   # Structure_Stand_Age_v1  
+  # Landsc750_Abie_Bal_v1                                                                                    
+  # Landsc750_Acer_Rub_v1                      
+  # Landsc750_Acer_Sah_v1                      
+  # Landsc750_Betu_All_v1                  
+  # Landsc750_Betu_Pap_v1                      
+  # Landsc750_Fagu_Gra_v1                      
+  # Landsc750_Frax_Ame_v1                      
+  # Landsc750_Lari_Lar_v1                      
+  # Landsc750_Pice_Gla_v1                      
+  # Landsc750_Pice_Mar_v1                      
+  # Landsc750_Pice_Rub_v1                                            
+  # Landsc750_Pinu_Ban_v1    
+  # Landsc750_Pinu_Res_v1                                           
+  # Landsc750_Pinu_Str_v1                      
+  # Landsc750_Popu_Bal_v1                      
+  # Landsc750_Popu_Tre_v1                                           
+  # Landsc750_Quer_Rub_v1                                           
+  # Landsc750_Thuj_Occ_v1                                         
+  # Landsc750_Tsug_Can_v1                                                                                 
+  # Landsc750_Biomass_TotalLiveAboveGround_v1
+  # Landsc750_Stand_Age_v1  
   # dev750
   # led750
   # water
@@ -171,21 +192,21 @@ for (j in 1:length(speclist)) {
   # landform
   # roughness
 
-  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+  x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+    save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
     brtplot(j,PC)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+      save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
       brtplot(j,PC)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
+      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
-        save(brt1,file=paste(w,speclist[j],"brtQC6.R",sep=""))
+        save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
         brtplot(j,PC)
       }  
     }

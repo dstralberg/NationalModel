@@ -6,7 +6,8 @@ library(reshape2)
 
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
-bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
+#bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
+bcr6 <- raster("G:/Boreal/NationalModelsV2/bcr61_1km.grd")[[1]]
 
 load("F:/BAM/BAMData/BAM_data_package_November2019.RData")
 
@@ -89,7 +90,6 @@ SSBCR6 <- SSBCR6[,1:3]
 
 eco <- raster("E:/GIS/ecoregions/CEC/quebececo1.tif")
 nalc <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
-bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
 
 # mwat <- c(0, 17.1, 0,  17.9, 18.1, 1,  18.9, 20, 0)
 # rclwat <- matrix(mwat, ncol=3, byrow=TRUE)
@@ -122,21 +122,21 @@ lf6 <- crop(lf,bcr6)
 # lf250 <- resample(lf6, bs2011bcr6, method='ngb')
 
 road <- raster("G:/Boreal/NationalModelsV2/BCR6/lineDensityMap_BCR6_Roads_v0.2.3_FFT_radius10000_t0.tif")
-bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
+bs<-stack("G:/Boreal/NationalModelsV2/bcr61clim_1km.grd")
 
 fut <- "E:/CMIP5/NA_ENSEMBLE_rcp85_2080s_Bioclim_ASCII/"
 setwd(fut)
 clim2080 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2080)
 futclim <- crop(futclim,bcr6)
-writeRaster(futclim,file=paste(w,"bcr6_clim2080_RCP85",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2080_RCP85",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/NA_ENSEMBLE_rcp85_2050s_Bioclim_ASCII/"
 setwd(fut)
 clim2050 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2050)
 futclim <- crop(futclim,bcr6)
-writeRaster(futclim,file=paste(w,"bcr6_clim2050_RCP85",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2050_RCP85",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CanESM2_rcp45_2085_Bioclim_ASCII/"
 setwd(fut)
@@ -144,7 +144,7 @@ clim2080 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2080)
 futclim <- crop(futclim,bcr6)
 names(futclim) <- gsub("CanESM2_rcp45_2085_","",names(futclim))
-writeRaster(futclim,file=paste(w,"bcr6_clim2080_CanESM2_RCP45",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2080_CanESM2_RCP45",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CanESM2_rcp45_2055_Bioclim_ASCII/"
 setwd(fut)
@@ -152,7 +152,7 @@ clim2050 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2050)
 futclim <- crop(futclim,bcr6)
 names(futclim) <- gsub("CanESM2_rcp45_2055_","",names(futclim))
-writeRaster(futclim,file=paste(w,"bcr6_clim2050_CanESM2_RCP45",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2050_CanESM2_RCP45",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CCSM4_rcp45_2085_Bioclim_ASCII/"
 setwd(fut)
@@ -160,7 +160,7 @@ clim2080 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2080)
 futclim <- crop(futclim,bcr6)
 names(futclim) <- gsub("CCSM4_rcp45_2085_","",names(futclim))
-writeRaster(futclim,file=paste(w,"bcr6_clim2080_CCSM4_RCP45",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2080_CCSM4_RCP45",sep=""),overwrite=TRUE)
 
 fut <- "E:/CMIP5/CCSM4_rcp45_2055_Bioclim_ASCII/"
 setwd(fut)
@@ -168,7 +168,7 @@ clim2050 <- list.files(fut, pattern =".asc$")
 futclim<-stack(clim2050)
 futclim <- crop(futclim,bcr6)
 names(futclim) <- gsub("CCSM4_rcp45_2055_","",names(futclim))
-writeRaster(futclim,file=paste(w,"bcr6_clim2050_CCSM4_RCP45",sep=""),overwrite=TRUE)
+writeRaster(futclim,file=paste(w,"bcr61_clim2050_CCSM4_RCP45",sep=""),overwrite=TRUE)
 
 # b2011 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/",pattern="tif$")
 # setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2011/")
@@ -244,6 +244,7 @@ dat2011 <- na.omit(dat2011)
 dat_2011 <- inner_join(dat2011, PKEYmatch[,2:3], by=c("SS")) #n=151379
 dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:23]) #n=34022
 #write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_v3.csv",row.names=FALSE)
+write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/NWT_dat2011_v3.csv",row.names=FALSE)
 
 bs2001bcr6 <- dropLayer(bs2001bcr6,19:20)
 dat2001 <- cbind(SSBCR6, extract(bs2001bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
@@ -258,6 +259,7 @@ dat2001 <- na.omit(dat2001)
 dat_2001 <- inner_join(dat2001, PKEYmatch[,2:3], by=c("SS")) #n=151379
 dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:23]) #n=18837
 #write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v3.csv",row.names=FALSE)
+write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/NWT_dat2001_v3.csv",row.names=FALSE)
 
 #climate + terrain layers
 cdat <- cbind(SSBCR6, extract(bs,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
@@ -265,7 +267,8 @@ cdat1 <- cbind(SSBCR6, extract(bs2011bcr6[[14:20]],as.matrix(cbind(SSBCR6$X,SSBC
 cdat2 <- cbind(cdat,cdat1[,4:ncol(cdat1)])
 cdat3 <- inner_join(cdat2, PKEYmatch[,2:3], by=c("SS")) #n=152483
 cdat3 <- distinct(cdat3[,1:37]) #n=48500
-write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv",row.names=FALSE)
+#write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv",row.names=FALSE)
+write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/NWT_cdat_v3.csv",row.names=FALSE)
 
 PC <- inner_join(PCcombo,PKEYmatch,by=c("PKEY")) #n=7498594
 PCBCR6 <- inner_join(PC, SSBCR6, by=c("SS")) #n=1541151
@@ -274,12 +277,15 @@ PCBCR6$PKEY <- as.character(PCBCR6$PKEY)
 PCBCR6$SPECIES <- as.character(PCBCR6$SPECIES)
 PCBCR62001 <- PCBCR6[PCBCR6$YEAR < 2006,] #n=390930
 PCBCR62011 <- PCBCR6[PCBCR6$YEAR > 2005,] #n=1150221
-write.csv(PCBCR62011,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2011_v3.csv",row.names=FALSE)
-write.csv(PCBCR62001,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2001_v3.csv",row.names=FALSE)
-write.csv(PCBCR6,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v3.csv",row.names=FALSE)
+# write.csv(PCBCR62011,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2011_v3.csv",row.names=FALSE)
+# write.csv(PCBCR62001,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC2001_v3.csv",row.names=FALSE)
+# write.csv(PCBCR6,"G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v3.csv",row.names=FALSE)
+write.csv(PCBCR62011,"G:/Boreal/NationalModelsV2/BCR6/NWTPC2011_v3.csv",row.names=FALSE)
+write.csv(PCBCR62001,"G:/Boreal/NationalModelsV2/BCR6/NWTPC2001_v3.csv",row.names=FALSE)
+write.csv(PCBCR6,"G:/Boreal/NationalModelsV2/BCR6/NWTPC_v3.csv",row.names=FALSE)
 
 PKEYBCR6 <- unique(PCBCR6[,1])
 off6 <- offcombo[offcombo$PKEY %in% PKEYBCR6,] #n=16736861
-write.csv(off6,"G:/Boreal/NationalModelsV2/BCR6/BCR6offsets_v3.csv",row.names=FALSE)
-
+#write.csv(off6,"G:/Boreal/NationalModelsV2/BCR6/BCR6offsets_v3.csv",row.names=FALSE)
+write.csv(off6,"G:/Boreal/NationalModelsV2/BCR6/NWToffsets_v3.csv",row.names=FALSE)
                    
