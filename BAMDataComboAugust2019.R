@@ -134,8 +134,8 @@ unique(PKEYsplitnomatch$PCODE)
 # [67] "BBSMB"       "BBSMI"       "BBSMN"       "BBSMT"       "BBSNB"       "BBSNL"      
 # [73] "BBSNM"       "BBSNS"       "BBSNT"       "BBSNU"       "BBSON"       "BBSPEI"     
 # [79] "BBSQC"       "BBSSD"       "BBSSK"       "BBSVT"       "BBSWI"       "BBSYK"   
-PKEYmatch <- unique(PKEYmatch[,1:4])
 PKEYmatch <- na.omit(PKEYmatch)
+PKEYmatch <- unique(PKEYmatch[,1:4])
 
 rm(dd)
 rm(off)

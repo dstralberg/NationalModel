@@ -18,6 +18,7 @@ names(combo2011)[191:194] <- c("TPI","TRI","slope","roughness")
 lf <- raster("G:/Boreal/NationalModelsV2/quebec/landform.grd")
 combo2011 <- addLayer(combo2011,lf)
 names(combo2011)[195] <- "lf"
+names(combo2011)[194] <- "rough250"
 
 provcrop <- crop(provstate, combo2011[[1]])
 
@@ -61,19 +62,19 @@ QCPC <- rbind(QCPC2001,QCPC2011)
 survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=25646
 survey2011 <- aggregate(QCPC2011$ABUND, by=list("PKEY"=QCPC2011$PKEY,"SS"=QCPC2011$SS), FUN=sum) #n=51916
 
-w <- "G:/Boreal/NationalModelsV2/Quebec/"
+w <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/CC/CCImpacts/QuebecLANDIS/"
 setwd(w)
 
 #generate predictions and plots from models
 brtplot <- function (j,PC) {
   load(paste(w,speclist[j],"brtQC7.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
-  write.csv(varimp,file=paste(w,speclist[j],"varimp6.csv",sep=""))
+  write.csv(varimp,file=paste(w,speclist[j],"varimp7.csv",sep=""))
   cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
   cvstats$deviance.null <- brt1$self.statistics$mean.null
   cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
   write.csv(cvstats,file=paste(w,speclist[j],"cvstats7.csv",sep=""))
-  pdf(paste(w,speclist[j],"_plot6.pdf",sep=""))
+  pdf(paste(w,speclist[j],"_plot7.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
@@ -102,8 +103,8 @@ brtplot <- function (j,PC) {
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
   plot(rast, col=bluegreen.colors(15), zlim=c(0,max), axes=FALSE, main=as.character(speclist[j]), add=TRUE, legend.width=1.5, horizontal = TRUE, smallplot = c(0.60,0.85,0.82,0.87), axis.args=list(cex.axis=1.2))
+  plot(spdf1, col = 'red', pch=1, cex=0.5, add = TRUE)
   plot(spdf2, col = 'black', pch=1, cex=0.2, add = TRUE)
-  plot(spdf1, col = 'red', pch=1, cex=PC1$ABUND, add = TRUE)
   plot(provcrop, col="gray", add=TRUE)
   text(2150000,7950000,"Potential density (males/ha)", cex=1.3)
   dev.off()
@@ -197,19 +198,4 @@ for (j in 1:length(speclist)) {
     save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
     brtplot(j,PC)
   }
-  if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-    x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
-    if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
-      brtplot(j,PC)
-    }
-    if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
-      x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
-      if (class(x1) != "NULL") {
-        save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
-        brtplot(j,PC)
-      }  
-    }
-  gc()
   }
-}

@@ -57,7 +57,7 @@ bs2011_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2011_750.grd")
 names(bs2011_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Species","Landsc750",names(bs2011_Gauss750))
 names(bs2011_Gauss750) <- gsub("Structure","Landsc750",names(bs2011_Gauss750))
-names(bs2011_Gauss750) <- gsub("Landcover","Landsc750",names(bs2011_Gauss750))
+names(bs2011_Gauss750) <- gsub("LandCover","Landsc750",names(bs2011_Gauss750))
 
 b2001 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
 setwd("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
@@ -69,7 +69,7 @@ bs2001_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2001_750.grd")
 names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
 names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
-names(bs2001_Gauss750) <- gsub("Landcover","Landsc750",names(bs2001_Gauss750))
+names(bs2001_Gauss750) <- gsub("LandCover","Landsc750",names(bs2001_Gauss750))
 
 #landcover and derived variables, LCC projection
 nalc <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
