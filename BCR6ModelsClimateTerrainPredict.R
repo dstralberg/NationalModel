@@ -66,6 +66,9 @@ bsf <-stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_clim2080_CanESM2_RCP45.grd")
 bsf <- resample(bsf,bs2)
 bs2080 <- stack(bsf,bs2)
 
+bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
+r2 <- bs2011_1km[[1]]
+
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 # offl <- read.csv("G:/Boreal/NationalModelsV2/Quebec/BAMoffsets.csv")
 # offla <- read.csv("G:/Boreal/NationalModelsV2/Quebec/Atlasoffsets.csv")

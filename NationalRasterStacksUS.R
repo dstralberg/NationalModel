@@ -16,7 +16,7 @@ w <-"G:/Boreal/NationalModelsV2/"
 # bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
 # bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.shp","bcr80_100km.shp","bcr81_100km.shp", "bcr82_100km.shp","bcr83_100km.shp")
 # canada <- shapefile("F:/GIS/basemaps/canadaLCC.shp")
-bcrsus <- c("bcrus14_100km.shp", "bcrus13_100km.shp", "bcrus12_100km.shp", "bcrus11_100km.shp", "bcrus10_100km.shp")
+bcrsus <- c("bcrus2_100km.shp", "bcrus4_100km.shp", "bcrus5_100km.shp", "bcrus14_100km.shp", "bcrus13_100km.shp", "bcrus12_100km.shp", "bcrus11_100km.shp", "bcrus10_100km.shp")
 
 #Adaptwest baseline climate variables
 cur <- "E:/CMIP5/baseline19812010/"
@@ -73,7 +73,7 @@ topog <-brick(paste(w,"topography_1km.grd",sep=""))
 names(topog) <- c("TPI","TRI","slope","roughness","lf")
 
 setwd(w)
-for (i in 1:length(bcrsus)){
+for (i in 1:3){
   bcr <- shapefile(bcrsus[i])
   clim1 <- mask(crop(curclim,bcr),bcr)
   landcov1 <- mask(crop(landcover,bcr),bcr)

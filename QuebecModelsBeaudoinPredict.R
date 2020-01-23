@@ -110,7 +110,7 @@ brtplot <- function (j,PC) {
   dev.off()
 }
 
-for (j in 1:length(speclist)) {
+for (j in 18:20) {
   specoff <- filter(offlc, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   

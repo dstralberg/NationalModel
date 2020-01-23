@@ -230,8 +230,32 @@ bs2 <- stack(paste(w,"bcr6_1km",sep=""))
 # names(bs2001bcr6)[nlayers(bs2001bcr6)] <- "wet"
 # writeRaster(bs2001bcr6,file=paste(w,"bcr6_2001rasters250",sep=""),overwrite=TRUE)
 bs2001bcr6 <- stack(paste(w,"bcr6_2001rasters250",sep=""))
+# 
+bs2011_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2011_750.grd")
+names(bs2011_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2011_Gauss750))
+names(bs2011_Gauss750) <- gsub("Species","Landsc750",names(bs2011_Gauss750))
+names(bs2011_Gauss750) <- gsub("Structure","Landsc750",names(bs2011_Gauss750))
+names(bs2011_Gauss750) <- gsub("LandCover","Landsc750",names(bs2011_Gauss750))
+bs2011_Gauss750 <- dropLayer(bs2011_Gauss750, c(1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
+bs2011bcr62 <- crop(bs2011_Gauss750,bcr6)
+bs2011bcr62 <- mask(bs2011bcr62,bcr6)
 
-bs2011bcr6 <- dropLayer(bs2011bcr6,19:20)
+bs2001_Gauss750 <- brick("G:/Boreal/NationalModelsV2/bs2001_750.grd")
+names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750))
+names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
+names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
+names(bs2001_Gauss750) <- gsub("LandCover","Landsc750",names(bs2001_Gauss750))
+bs2001_Gauss750 <- dropLayer(bs2001_Gauss750, c(1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,39,40,41,42,43,46,47,48,49,52,53,54,55,56,57,59,60,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,90,91,92,93))
+bs2001bcr62 <- crop(bs2001_Gauss750,bcr6)
+bs2001bcr62 <- mask(bs2001bcr62,bcr6)
+
+bs2011bcr6 <- addLayer(bs2011bcr6,bs2011bcr62)
+# writeRaster(bs2001bcr6,file=paste(w,"bcr6_2001rasters250_2",sep=""),overwrite=TRUE)
+writeRaster(bs2011bcr6,file=paste(w,"bcr6_2011rasters250_2",sep=""),overwrite=TRUE)
+
+bs2001bcr6 <- stack(paste(w,"bcr6_2001rasters250_2",sep=""))
+bs2011bcr6 <- stack(paste(w,"bcr6_2011rasters250_2",sep=""))
+
 dat2011 <- cbind(SSBCR6, extract(bs2011bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
 dat2011 <-cbind(dat2011,extract(nalc,as.matrix(cbind(dat2011$X,dat2011$Y)))) 
 names(dat2011)[ncol(dat2011)] <- "LCC"
@@ -240,12 +264,12 @@ names(dat2011)[ncol(dat2011)] <- "landform"
 dat2011 <-cbind(dat2011,extract(wet250,as.matrix(cbind(dat2011$X,dat2011$Y))))
 names(dat2011)[ncol(dat2011)] <- "wet"
 dat2011$SS <- as.character(dat2011$SS)
-dat2011 <- na.omit(dat2011) 
-dat_2011 <- inner_join(dat2011, PKEYmatch[,2:3], by=c("SS")) #n=151379
-dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:23]) #n=34022
-#write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_v3.csv",row.names=FALSE)
+dat2011 <- na.omit(dat2011) #n=48940
+dat_2011 <- inner_join(dat2011, PKEYmatch[,2:3], by=c("SS")) #n=135397
+dat_2011 <- distinct(dat_2011[dat_2011$YEAR > 2005,1:35]) #n=33667
+write.csv(dat_2011,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_v3.csv",row.names=FALSE)
 
-bs2001bcr6 <- dropLayer(bs2001bcr6,19:20)
+bs2001bcr6 <- addLayer(bs2001bcr6,bs2011bcr62)
 dat2001 <- cbind(SSBCR6, extract(bs2001bcr6,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
 dat2001 <-cbind(dat2001,extract(nalc,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "LCC"
@@ -255,9 +279,9 @@ dat2001 <-cbind(dat2001,extract(wet250,as.matrix(cbind(dat2001$X,dat2001$Y))))
 names(dat2001)[ncol(dat2001)] <- "wet"
 dat2001$SS <- as.character(dat2001$SS)
 dat2001 <- na.omit(dat2001)
-dat_2001 <- inner_join(dat2001, PKEYmatch[,2:3], by=c("SS")) #n=151379
-dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:23]) #n=18837
-#write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v3.csv",row.names=FALSE)
+dat_2001 <- inner_join(dat2001, PKEYmatch[,2:3], by=c("SS")) #n=135397
+dat_2001 <- distinct(dat_2001[dat_2001$YEAR < 2006,1:35]) #n=14800
+write.csv(dat_2001,"G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v3.csv",row.names=FALSE)
 
 #climate + terrain layers
 cdat <- cbind(SSBCR6, extract(bs,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
@@ -265,7 +289,7 @@ cdat1 <- cbind(SSBCR6, extract(bs2011bcr6[[14:20]],as.matrix(cbind(SSBCR6$X,SSBC
 cdat2 <- cbind(cdat,cdat1[,4:ncol(cdat1)])
 cdat3 <- inner_join(cdat2, PKEYmatch[,2:3], by=c("SS")) #n=152483
 cdat3 <- distinct(cdat3[,1:37]) #n=48500
-write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv",row.names=FALSE)
+#write.csv(cdat3,"G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv",row.names=FALSE)
 
 PC <- inner_join(PCcombo,PKEYmatch,by=c("PKEY")) #n=7498594
 PCBCR6 <- inner_join(PC, SSBCR6, by=c("SS")) #n=1541151

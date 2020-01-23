@@ -49,13 +49,13 @@ speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
 # bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
-# bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
+bs2011 <- stack(paste(w,"bcr6_2011rasters250_2.grd",sep=""))
 # bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
-bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
-bs <- crop(bs,bs2)
-bs <- resample(bs,bs2)
-bs3 <- stack(bs,bs2)
+#bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
+bs <- crop(bs,bs2011)
+bs <- resample(bs,bs2011)
+bs3 <- stack(bs,bs2011)
 ARU <- bs3[[1]]*0
 names(ARU) <- "ARU"
 bs3 <- addLayer(bs3,ARU)
@@ -80,17 +80,17 @@ off6 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6offsets_v3.csv")
 off6$PKEY <- as.character(off6$PKEY)
 off6$SPECIES <- as.character(off6$SPECIES)
 
-dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v3.csv") #n=18837
+dat2001 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2001_v3.csv") #n=40012
 dat2001$SS <- as.character(dat2001$SS)
-#dat_2001 <- dat2001[!duplicated(dat2001[, 2:3]), ] #n=18234
+#dat_2001 <- dat2001[!duplicated(dat2001[, 2:3]), ] 
 #dat2001$count <- 1
 
-dat2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_V3.csv") #n=34022
+dat2011 <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_dat2011_V3.csv") #n=33667
 dat2011$SS <- as.character(dat2011$SS)
-#dat_2011 <- dat2011[!duplicated(dat2011[, 2:3]), ] #n=31027
+#dat_2011 <- dat2011[!duplicated(dat2011[, 2:3]), ] 
 #dat2011$count <- 1
 
-cdat <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv") #n=18837
+cdat <- read.csv("G:/Boreal/NationalModelsV2/BCR6/bcr6_cdat_v3.csv") 
 cdat$SS <- as.character(cdat$SS)
 
 dat2011 <- left_join(dat2011,cdat[,1:30],by=c("SS","X","Y"))
@@ -104,11 +104,11 @@ PC2001$PKEY <- as.character(PC2001$PKEY)
 PC2001$SS <- as.character(PC2001$SS)
 PC <- read.csv("G:/Boreal/NationalModelsV2/BCR6/BCR6PC_v3.csv")
 
-survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS, "ARU"=PC2001$ARU), FUN=sum) 
-survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
-survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS, "ARU"=PC2011$ARU), FUN=sum) 
-survey2011 <- survey2011[sample(1:nrow(survey2011)), ]
-survey <- rbind(survey2001,survey2011) 
+survey2001 <- aggregate(PC2001$ABUND, by=list("PKEY"=PC2001$PKEY,"SS"=PC2001$SS, "ARU"=PC2001$ARU), FUN=sum) #n=61408
+# survey2001 <- survey2001[sample(1:nrow(survey2001)), ]
+survey2011 <- aggregate(PC2011$ABUND, by=list("PKEY"=PC2011$PKEY,"SS"=PC2011$SS, "ARU"=PC2011$ARU), FUN=sum) #n=64994
+# survey2011 <- survey2011[sample(1:nrow(survey2011)), ]
+survey <- rbind(survey2001,survey2011) #n=126402
 
 #calculating sample weights as inverse of survey effort within 5x5 pixel area
 samprast2011 <- rasterize(cbind(dat2011$X,dat2011$Y), r2, field=1, fun='sum')
@@ -137,7 +137,7 @@ brtplot <- function (j) {
   cvstats$deviance.null <- brt1$self.statistics$mean.null
   cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
   write.csv(cvstats,file=paste(w,speclist[j],"cvstats8.csv",sep=""))
-  pdf(paste(w,speclist[j],"_plot7.pdf",sep=""))
+  pdf(paste(w,speclist[j],"_plot8.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
   rast <- raster::predict(bs3, brt1, type="response", n.trees=brt1$n.trees)
@@ -175,7 +175,7 @@ mapplot <- function (j) {
   rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km6.png",sep=""), height=800, width=650)
+  png(file=paste(w,speclist[j],"_pred1km8.png",sep=""), height=800, width=650)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -228,8 +228,8 @@ for (j in 1:length(speclist)) {
   dat1$SPECIES <- as.character(speclist[j])
   dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND)) 
   #dat11 <- distinct(dat1,SS,.keep_all=TRUE) #randomly select one survey for analysis
-  s2001 <- left_join(dat1,specoff, by=c("SPECIES","PKEY"))
-  d2001 <- left_join(s2001, dat_2001, by=c("SS")) 
+  s2001 <- dplyr::left_join(dat1,specoff, by=c("SPECIES","PKEY"))
+  d2001 <- dplyr::left_join(s2001, dat_2001, by=c("SS")) 
   
   specdat2011 <- filter(PC2011, SPECIES == as.character(speclist[j])) 
   specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS, "ARU"=specdat2011$ARU), FUN=sum)
@@ -242,9 +242,9 @@ for (j in 1:length(speclist)) {
   d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo[,c(1:6,9,11:18,21:26,28,30:38,40:47,49:50,52:57)])
+  datcombo <- na.omit(datcombo[,c(1:6,9,11:18,21:37,40,43:51,53:60,62:63,65:67,69)])
   
-  potvar <- datcombo[,c(3,7:45)]
+  potvar <- datcombo[,c(3,7:55)]
   var <- get_cn(potvar)
   
   datcombo$wat <- as.factor(datcombo$wat)
