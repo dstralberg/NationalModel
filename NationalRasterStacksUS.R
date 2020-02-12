@@ -31,7 +31,10 @@ curclim<-stack(clim)
 # rcroad <- matrix(mr, ncol=3, byrow=TRUE)
 # rrc <- reclassify(road,rcroad)
 # writeRaster(rrc,file=paste(w,"road10",sep=""),overwrite=TRUE)
-rrc <- raster(paste(w,"road10.grd",sep=""))
+#rrc <- raster(paste(w,"road10.grd",sep=""))
+
+road1k <- raster("E:/GIS/disturbance/VenterEtAlFootprint/RoadsLCC.tif")
+roadr <- resample(road1k, topog, method="ngb")
 
 #MODIS-based landcover (250-m)
 # nalc2005 <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
@@ -73,7 +76,7 @@ topog <-brick(paste(w,"topography_1km.grd",sep=""))
 names(topog) <- c("TPI","TRI","slope","roughness","lf")
 
 setwd(w)
-for (i in 1:3){
+for (i in 1:length(bcrsus)){
   bcr <- shapefile(bcrsus[i])
   clim1 <- mask(crop(curclim,bcr),bcr)
   landcov1 <- mask(crop(landcover,bcr),bcr)
@@ -87,8 +90,9 @@ for (i in 1:3){
     bs <- addLayer(bs, landcov1[[j]])}
   for (j in 1:nlayers(topo1)) {
     bs <- addLayer(bs, topo1[[j]])}
-  rrc1 <- crop(extend(rrc,bcr),bcr)
-  ROAD <- mask(rrc1,bcr)
+  rrc1 <- crop(extend(road1k,bcr),bcr)
+  ROAD <- resample(rrc1,clim1,method="ngb")
+  ROAD <- mask(ROAD,bcr)
   bs <- stack(bs,ROAD)
   names(bs)[nlayers(bs)] <- "ROAD"
   writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrsus[i]),"all_1km",sep=""),overwrite=TRUE)

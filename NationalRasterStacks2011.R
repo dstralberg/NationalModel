@@ -11,11 +11,11 @@ LCC <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=N
 lazea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 library(raster)
 w <-"G:/Boreal/NationalModelsV2/"
-load(paste(w,"BAMdb-GNMsubset-2019-03-01.RData",sep=""))
+#load(paste(w,"BAMdb-GNMsubset-2019-03-01.RData",sep=""))
 
 bcrs <- c("bcr4_100km.shp","bcr5_100km.shp","bcr9_100km.shp","bcr10_100km.shp","bcr11_100km.shp","bcr12_100km.shp","bcr13_100km.shp","bcr14_100km.shp")
 bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.shp","bcr80_100km.shp","bcr81_100km.shp", "bcr82_100km.shp","bcr83_100km.shp")
-canada <- shapefile("F:/GIS/basemaps/canadaLCC.shp")
+canada <- shapefile("E:/GIS/basemaps/canadaLCC.shp")
 
 #Adaptwest baseline climate variables
 cur <- "E:/CMIP5/baseline19812010/"
@@ -94,6 +94,8 @@ names(landscape)[1:4] <- gsub("v1","v1.1",names(landscape)[1:4])
 topog <-brick(paste(w,"topography_1km.grd",sep=""))
 names(topog) <- c("TPI","TRI","slope","roughness","lf")
 
+road1k <- raster("E:/GIS/disturbance/VenterEtAlFootprint/RoadsLCC.tif")
+
 setwd(w)
 for (i in 1:length(bcrs)){
   vars <- CN[[i]]
@@ -149,7 +151,7 @@ for (i in 1:length(bcrs2)){
   biomass1 <- mask(crop(biomass,bcr),bcr)
   nalc <- mask(crop(landcover[[3]],biomass1[[1]]),biomass1[[1]])
   lf <- mask(crop(topog[[5]],biomass1[[1]]),biomass1[[1]])
-  rrc1 <- crop(extend(rrc,biomass1[[1]]),biomass1[[1]])
+  rrc1 <- crop(extend(road1k,biomass1[[1]]),biomass1[[1]])
   ROAD <- mask(rrc1,biomass1[[1]])
   bcrr <- rasterize(bcr,curclim[[1]])
   bcrc <- mask(crop(bcrr,lf),lf)
@@ -228,8 +230,9 @@ for (i in 1:length(bcrs)){
     bs <- addLayer(bs, landcov1[[j]])}
   for (j in 1:nlayers(topo1)) {
     bs <- addLayer(bs, topo1[[j]])}
-  rrc1 <- crop(extend(rrc,biomass1[[1]]),biomass1[[1]])
-  ROAD <- mask(rrc1,biomass1[[1]])
+  rrc1 <- crop(extend(road1k,biomass1[[1]]),biomass1[[1]])
+  ROAD <- resample(rrc1,biomass1[[1]],method="ngb")
+  ROAD <- mask(ROAD,biomass1[[1]])
   bs <- stack(bs,ROAD)
   names(bs)[nlayers(bs)] <- "ROAD"
   writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"all_1km",sep=""),overwrite=TRUE)
