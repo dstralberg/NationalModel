@@ -13,6 +13,7 @@ bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyell
 bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
 
 bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
+blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
 p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
@@ -73,6 +74,26 @@ brtplot <- function (rast,spec) {
   dev.off()
 }
 
+
+brtplot <- function (rast,spec) {
+  prev <- cellStats(rast, 'mean')	
+  min <- max(prev,0.01)
+  min <- min(min,0.05)
+  #q99 <- quantile(rast, probs=c(0.99))
+  #max <- max(3*prev,q99)
+  max <- cellStats(rast, 'max')
+  png(file=paste0(w,spec,"/",spec,"_pred1km2.png"), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0), xpd=TRUE)
+  par(mar=c(0,0,0,0))
+  plot(rast, col="light yellow", maxpixels=5000000, zlim=c(0,min), axes=FALSE, legend=FALSE)
+  #plot(rast, col=blueyellow[10], zlim=c(max,2), axes=FALSE, add=TRUE, legend=FALSE)
+  plot(rast, col=bgy, zlim=c(min,max), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(p, col="gray", add=TRUE)
+  plot(l, col="gray", border=NA,add=TRUE)
+  plot(bcr, col=NA, border="dark gray", add=TRUE)
+  #text(2200000,9400000,"Potential density (males/ha)", cex=1.3)
+  dev.off()
+}
 #maps with range boundaries and occurrence points
 brtplot2 <- function (rast,spec,range) {
   prev <- cellStats(rast, 'mean')	
