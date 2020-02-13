@@ -65,7 +65,6 @@ brtplot <- function (rast,spec) {
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0), xpd=TRUE)
   par(mar=c(0,0,0,0))
   plot(rast, col="light yellow", maxpixels=5000000, zlim=c(0,min), axes=FALSE, legend=FALSE)
-  #plot(rast, col=bgy[10], zlim=c(max,2), axes=FALSE, add=TRUE, legend=FALSE)
   plot(rast, col=bgy, zlim=c(min,max), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
   plot(p, col="gray", add=TRUE)
   plot(l, col="gray", border=NA,add=TRUE)
@@ -75,47 +74,29 @@ brtplot <- function (rast,spec) {
 }
 
 
-brtplot <- function (rast,spec) {
-  prev <- cellStats(rast, 'mean')	
-  min <- max(prev,0.01)
-  min <- min(min,0.05)
-  #q99 <- quantile(rast, probs=c(0.99))
-  #max <- max(3*prev,q99)
-  max <- cellStats(rast, 'max')
-  png(file=paste0(w,spec,"/",spec,"_pred1km2.png"), width=2600, height=1600, res=216)
-  par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0), xpd=TRUE)
-  par(mar=c(0,0,0,0))
-  plot(rast, col="light yellow", maxpixels=5000000, zlim=c(0,min), axes=FALSE, legend=FALSE)
-  #plot(rast, col=blueyellow[10], zlim=c(max,2), axes=FALSE, add=TRUE, legend=FALSE)
-  plot(rast, col=bgy, zlim=c(min,max), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(p, col="gray", add=TRUE)
-  plot(l, col="gray", border=NA,add=TRUE)
-  plot(bcr, col=NA, border="dark gray", add=TRUE)
-  #text(2200000,9400000,"Potential density (males/ha)", cex=1.3)
-  dev.off()
-}
 #maps with range boundaries and occurrence points
 brtplot2 <- function (rast,spec,range) {
   prev <- cellStats(rast, 'mean')	
-  q99 <- quantile(rast, probs=c(0.99))
-  max <- max(3*prev,q99)
+  min <- max(prev,0.01)
+  min <- min(min,0.05)
+  max <- cellStats(rast, 'max')
   PC1 <- PCmatch[PCmatch$SPECIES==spec,]
   occur <- left_join(PC1,SScombo,by="SS")
   occur <- occur[occur$ABUND > 0,]
   occur <- na.omit(occur)
-  write.csv(as.data.frame(occur), file=paste(x,spec,"_occur.csv",sep=""), row.names=FALSE)
+  #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
   occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
   occurcan <- occursp[canada,]
   png(file=paste(w,spec,"_pred1km2.png",sep=""), width=2250, height=1600, res=216)
   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,0,0))
-  plot(rast, col="blue", maxpixels=5000000, axes=FALSE, legend=FALSE)
-  plot(rast, col=bluegreen.colors(15), maxpixels=5000000, zlim=c(0,max), axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95), axis.args=list(cex.axis=1.3))
+  plot(rast, col="light yellow", maxpixels=5000000, zlim=c(0,min), axes=FALSE, legend=FALSE)
+  plot(rast, col=bgy, zlim=c(min,max), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
   plot(p, col="gray", add=TRUE)
   plot(l, col="gray", border=NA,add=TRUE)
   plot(range, col=NA, border="dark red", add=TRUE)
   points(occurcan[,7:8], col = 'black', pch=1, cex=0.4)
-  text(2200000,9000000,"Potential density (males/ha)", cex=1.3)
+  #text(2200000,9000000,"Potential density (males/ha)", cex=1.3)
   dev.off()
 }
 
