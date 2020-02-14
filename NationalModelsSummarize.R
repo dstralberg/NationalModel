@@ -12,16 +12,17 @@ bcrlu <- unique(as.data.frame(bcr[,c(5,7)]))
 names(bcrlu) <- c("BCR","BCRname")
 canada <- shapefile("E:/GIS/basemaps/canadaLCC.shp")
 bcrcan <- crop(bcr,canada)
-landcov <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
 setwd(w)
-a<- raster(specpred[1])
-# lc <- crop(landcov,a)
+models <- list.files(paste0(w,"ALFL/"),pattern=".tif")
+a <- raster(paste0(w,"ALFL/",models[1]))
 # lcr <- resample(lc,a,method='ngb')
 # writeRaster(lcr,file="G:/Boreal/NationalModelsV2/lcr.tif",overwrite=TRUE)
 # bcrr <- rasterize(bcrcan,lcr,field="BCR")
 # writeRaster(bcrr,file="G:/Boreal/NationalModelsV2/bcrr.tif",overwrite=TRUE)
 landcov <- raster("G:/Boreal/NationalModelsV2/lcr.tif")
+lc <- crop(landcov,a)
 units <- raster("G:/Boreal/NationalModelsV2/bcrr.tif")
+bc <- crop(units,a)
 lu <- read.csv("G:/Boreal/NationalModelsV2/landcov.csv")
 names(lu) <- c("nalc","landcover")
 
@@ -30,8 +31,8 @@ sumdens <- function(species,landcov,units){
   setwd(paste0(w,species,"/"))
   models <- list.files(paste0(w,species,"/"),pattern=".tif")
   models <- grep("-SD.tif",models,invert=TRUE,value=TRUE) 
-  bcrv <- getValues(units)
-  lcv <- getValues(landcov)
+  bcrv <- getValues(bc)
+  lcv <- getValues(lc)
   bcrlc <- as.data.frame(cbind(bcrv,lcv))
   bcrlc$count <- 1
   names(bcrlc) <- c("BCR","nalc","count")
@@ -120,4 +121,8 @@ for (j in 2:length(specpred)) {
   #plotdens(species,landcov,units)
 }
 
-
+for (j in 2:length(specpred)) {
+  species<-specpred[j]
+  d <- read.csv(paste0(w,species,"/",species,"_densities.csv"))
+  write.csv(d,file=paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/",species,"_densities.csv"),row.names=FALSE)
+}         
