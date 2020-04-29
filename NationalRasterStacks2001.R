@@ -24,19 +24,19 @@ curclim<-stack(clim)
 rrc <- raster(paste(w,"road10.grd",sep=""))
 
 #MODIS-based landcover (250-m)
-for (x in 2001:2011){ 
+# for (x in 2001:2011){ 
   nalcx <- raster(paste0("E:/GIS/landcover/LCTS_2000-2011/LCTS19c",x,".tif"))
   nalc <- resample(nalcx,curclim,method="ngb")
-  writeRaster(nalc,paste0(w,"nalc-1km",x,".tif",sep=""))
+  writeRaster(nalc,paste0(w,"nalc-1km_2001",x,".tif",sep=""))
   mwat <- c(0, 17.1, 0,  17.9, 18.1, 1,  18.9, 20, 0)
   rclwat <- matrix(mwat, ncol=3, byrow=TRUE)
-  water <- reclassify(nalc2005,rclwat)
+  water <- reclassify(nalc,rclwat)
   murb <- c(0, 16.1, 0,  16.9, 17.1, 1,  17.9, 20, 0)
   rclurb <- matrix(murb, ncol=3, byrow=TRUE)
-  urban <- reclassify(nalc2005,rclurb)
+  urban <- reclassify(nalc,rclurb)
   mag <- c(0, 14.1, 0,  14.9, 15.1, 1,  15.9, 20, 0)
   rclag <- matrix(mag, ncol=3, byrow=TRUE)
-  ag <- reclassify(nalc2005,rclag)
+  ag <- reclassify(nalc,rclag)
   x <- stack(urban,ag)
   urbag <- max(x)
   fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
@@ -46,9 +46,9 @@ for (x in 2001:2011){
   landcover <- resample(landcov,curclim)
   landcover <- addLayer(landcover,nalc)
   names(landcover) <- c("dev750","led750","nalc")
-  writeRaster(landcover,file=paste0(w,"landcov_1km",x,sep=""),overwrite=TRUE)
-}
-
+  writeRaster(landcover,file=paste0(w,"landcov_1km_2001",sep=""),overwrite=TRUE)
+# }
+# 
 landcover <- brick(paste(w,"landcov_1km_2001.grd",sep=""))
 
 #kNN biomass layers, 2001 (250-m)
@@ -70,7 +70,7 @@ biomass <- brick(paste(w,"bs2001_1km.grd",sep=""))
 # names(bs2001_Gauss750) <- gsub("SpeciesGroups","Landsc750",names(bs2001_Gauss750))
 # names(bs2001_Gauss750) <- gsub("Species","Landsc750",names(bs2001_Gauss750))
 # names(bs2001_Gauss750) <- gsub("Structure","Landsc750",names(bs2001_Gauss750))
-# names(bs2001_Gauss750) <- gsub("Landcover","Landsc750",names(bs2001_Gauss750))
+# names(bs2001_Gauss750) <- gsub("LandCover","Landsc750",names(bs2001_Gauss750))
 # landscape <- resample(bs2001_Gauss750,biomass)
 # writeRaster(landscape, file=paste(w,"bs2001_750_1km",sep=""))
 landscape <- brick(paste(w,"bs2001_750_1km.grd",sep=""))
@@ -91,117 +91,6 @@ topog <-brick(paste(w,"topography_1km.grd",sep=""))
 names(topog) <- c("TPI","TRI","slope","roughness","lf")
 
 road1k <- raster("E:/GIS/disturbance/VenterEtAlFootprint/RoadsLCC.tif")
-
-setwd(w)
-for (i in 1:length(bcrs)){
-  vars <- CN[[i]]
-  bcr <- shapefile(bcrs[i])
-  biomass1 <- mask(crop(biomass,bcr),bcr)
-  landscape1 <- mask(crop(landscape,bcr),bcr)
-  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
-  landcov1 <- mask(crop(landcover,biomass1[[1]]),biomass1[[1]])
-  topo1 <- mask(crop(topog,biomass1[[1]]),biomass1[[1]])
-  bcrr <- rasterize(bcr,curclim[[1]])
-  bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
-  bs <- stack(bcrc)
-  names(bs) <- "bcr"
-  for (j in 1:nlayers(clim1)) {
-    if (names(clim1)[j] %in% vars) {bs <- addLayer(bs, clim1[[j]])}
-  }
-  for (j in 1:nlayers(biomass1)) {
-    if (names(biomass1)[j] %in% vars) {bs <- addLayer(bs, biomass1[[j]])}
-  }
-  for (j in 1:nlayers(landscape1)) {
-    if (names(landscape1)[j] %in% vars) {bs <- addLayer(bs, landscape1[[j]])}
-  }
-  for (j in 1:nlayers(landcov1)) {
-    if (names(landcov1)[j] %in% vars) {bs <- addLayer(bs, landcov1[[j]])}
-  }  
-  for (j in 1:nlayers(topo1)) {
-    if (names(topo1)[j] %in% vars) {bs <- addLayer(bs, topo1[[j]])}
-  }   
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"_1km",sep=""),overwrite=TRUE)
-}
-
-setwd(w)
-#write categorical rasters
-for (i in 1:length(bcrs)){
-  bcr <- shapefile(bcrs[i])
-  biomass1 <- mask(crop(biomass,bcr),bcr)
-  nalc <- mask(crop(landcover[[3]],biomass1[[1]]),biomass1[[1]])
-  lf <- mask(crop(topog[[5]],biomass1[[1]]),biomass1[[1]])
-  rrc1 <- crop(extend(rrc,biomass1[[1]]),biomass1[[1]])
-  ROAD <- mask(rrc1,biomass1[[1]])
-  bcrr <- rasterize(bcr,curclim[[1]])
-  bcrc <- mask(crop(bcrr,lf),lf)
-  bs <- stack(bcrc,nalc,lf,ROAD)
-  names(bs) <- c("bcr","nalc","lf","ROAD")
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"cat_1km",sep=""),overwrite=TRUE)
-}
-
-
-setwd(w)
-#write categorical rasters
-for (i in 1:length(bcrs2)){
-  bcr <- shapefile(bcrs2[i])
-  biomass1 <- mask(crop(biomass,bcr),bcr)
-  nalc <- mask(crop(landcover[[3]],biomass1[[1]]),biomass1[[1]])
-  lf <- mask(crop(topog[[5]],biomass1[[1]]),biomass1[[1]])
-  rrc1 <- crop(extend(road1k,biomass1[[1]]),biomass1[[1]])
-  ROAD <- mask(rrc1,biomass1[[1]])
-  bcrr <- rasterize(bcr,curclim[[1]])
-  bcrc <- mask(crop(bcrr,lf),lf)
-  bs <- stack(bcrc,nalc,lf,ROAD)
-  names(bs) <- c("bcr","nalc","lf","ROAD")
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs2[i]),"cat_1km",sep=""),overwrite=TRUE)
-}
-
-setwd(w)
-#write climate rasters
-for (i in 1:length(bcrs)){
-  bcr <- shapefile(bcrs[i])
-  biomass1 <- mask(crop(biomass,bcr),bcr)
-  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
-  bcrr <- rasterize(bcr,curclim[[1]])
-  bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
-  bs <- stack(bcrc)
-  names(bs) <- "bcr"
-  for (j in 1:nlayers(clim1)) {
-    bs <- addLayer(bs, clim1[[j]])
-  }
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"clim_1km",sep=""),overwrite=TRUE)
-}
-
-setwd(w)
-for (i in 1:length(bcrs2)){
-  #vars <- CN[[i]]
-  bcr <- shapefile(bcrs2[i])
-  bcr <- crop(bcr,canada)
-  biomass1 <- mask(crop(biomass,bcr),bcr)
-  landscape1 <- mask(crop(landscape,bcr),bcr)
-  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
-  landcov1 <- mask(crop(landcover,biomass1[[1]]),biomass1[[1]])
-  topo1 <- mask(crop(topog,biomass1[[1]]),biomass1[[1]])
-  bcrr <- rasterize(bcr,clim1[[1]])
-  #bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
-  bs <- stack(bcrr)
-  names(bs) <- "bcr"
-  for (j in 1:nlayers(clim1)) {
-    bs <- addLayer(bs, clim1[[j]])}
-  for (j in 1:nlayers(biomass1)) {
-     bs <- addLayer(bs, biomass1[[j]])}
-  for (j in 1:nlayers(landscape1)) {
-    bs <- addLayer(bs, landscape1[[j]])}
-  for (j in 1:nlayers(landcov1)) {
-    bs <- addLayer(bs, landcov1[[j]])}
-  for (j in 1:nlayers(topo1)) {
-    bs <- addLayer(bs, topo1[[j]])}
-  rrc1 <- crop(extend(rrc,biomass1[[1]]),biomass1[[1]])
-  ROAD <- mask(rrc1,biomass1[[1]])
-  bs <- stack(bs,ROAD)
-  names(bs)[nlayers(bs)] <- "ROAD"
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs2[i]),"all_1km",sep=""),overwrite=TRUE)
-}
 
 setwd(w)
 for (i in 1:length(bcrs)){
@@ -231,7 +120,38 @@ for (i in 1:length(bcrs)){
   ROAD <- mask(ROAD,biomass1[[1]])
   bs <- stack(bs,ROAD)
   names(bs)[nlayers(bs)] <- "ROAD"
-  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"all_1km",sep=""),overwrite=TRUE)
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs[i]),"all_2001_1km",sep=""),overwrite=TRUE)
+}
+
+setwd(w)
+for (i in 1:length(bcrs2)){
+  bcr <- shapefile(bcrs2[i])
+  bcr <- crop(bcr,canada)
+  biomass1 <- mask(crop(biomass,bcr),bcr)
+  landscape1 <- mask(crop(landscape,bcr),bcr)
+  clim1 <- mask(crop(curclim,biomass1[[1]]),biomass1[[1]])
+  landcov1 <- mask(crop(landcover,biomass1[[1]]),biomass1[[1]])
+  topo1 <- mask(crop(topog,biomass1[[1]]),biomass1[[1]])
+  bcrr <- rasterize(bcr,clim1[[1]])
+  #bcrc <- mask(crop(bcrr,biomass1[[1]]),biomass1[[1]])
+  bs <- stack(bcrr)
+  names(bs) <- "bcr"
+  for (j in 1:nlayers(clim1)) {
+    bs <- addLayer(bs, clim1[[j]])}
+  for (j in 1:nlayers(biomass1)) {
+    bs <- addLayer(bs, biomass1[[j]])}
+  for (j in 1:nlayers(landscape1)) {
+    bs <- addLayer(bs, landscape1[[j]])}
+  for (j in 1:nlayers(landcov1)) {
+    bs <- addLayer(bs, landcov1[[j]])}
+  for (j in 1:nlayers(topo1)) {
+    bs <- addLayer(bs, topo1[[j]])}
+  rrc1 <- crop(extend(road1k,biomass1[[1]]),biomass1[[1]])
+  ROAD <- resample(rrc1,biomass1[[1]],method="ngb")
+  ROAD <- mask(ROAD,biomass1[[1]])
+  bs <- stack(bs,ROAD)
+  names(bs)[nlayers(bs)] <- "ROAD"
+  writeRaster(bs,file=paste(w,gsub("_100km.shp","",bcrs2[i]),"all_2001_1km",sep=""),overwrite=TRUE)
 }
 
 

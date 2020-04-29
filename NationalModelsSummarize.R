@@ -26,6 +26,9 @@ bc <- crop(units,a)
 lu <- read.csv("G:/Boreal/NationalModelsV2/landcov.csv")
 names(lu) <- c("nalc","landcover")
 
+bbcr <- shapefile("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/BCR_BAMSubunits_LCC.shp")
+bbcrr <- rasterize(bbcr,a)
+
 
 sumdens <- function(species,landcov,units){
   setwd(paste0(w,species,"/"))
@@ -66,7 +69,7 @@ sumdens <- function(species,landcov,units){
     #write.csv(densmean,file=paste0(w,specpred,"/",spec,"_densities.csv"),row.names=FALSE)
     denstable <- rbind(denstable,densmean)
   }
-  write.csv(denstable,file=paste0(w,species,"/",species,"_densities.csv"),row.names=FALSE)
+  return(denstable)
 }
 
 
@@ -116,7 +119,8 @@ for (i in 1:length(models)){
 
 for (j in 2:length(specpred)) {
   species<-specpred[j]
-  d <- sumdens(species,landcov,units)
+  d <- sumdens(species,landcov,bbcr)
+  write.csv(d,file=paste0(w,species,"/",species,"_densities_subunit.csv"),row.names=FALSE)
   #boxplotdens(species,landcov,units)
   #plotdens(species,landcov,units)
 }
