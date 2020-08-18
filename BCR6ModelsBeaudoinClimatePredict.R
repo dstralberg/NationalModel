@@ -5,6 +5,8 @@ library(maptools)
 library(dplyr)
 library(sf)
 
+w <-"G:/Boreal/NationalModelsV2/BCR6/"
+
 #' Evaluate predictor sets based on hist, SD, etc
 get_cn <- function(z, rmax=0.9) {
   SD <- apply(z, 2, sd)
@@ -43,8 +45,8 @@ p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
-speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
-speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
+speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
+speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
@@ -56,9 +58,14 @@ bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
 bs <- crop(bs,bs2)
 bs <- resample(bs,bs2)
 bs3 <- stack(bs,bs2)
-ARU <- bs3[[1]]*0
-names(ARU) <- "ARU"
-bs3 <- addLayer(bs3,ARU)
+
+wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
+wet <- resample(wet250, bs, method="ngb")
+bs3 <- stack(bs3[[1:46]],wet)
+names(bs3[[47]]) <- "wet"
+# ARU <- bs3[[1]]*0
+# names(ARU) <- "ARU"
+# bs3 <- addLayer(bs3,ARU)
 
 bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
@@ -125,27 +132,26 @@ names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
 dat_2001$wt <- 1/dat_2001$sampsum25
 dat_2001$SS <- as.character(dat_2001$SS) #n=18837
 
-w <-"G:/Boreal/NationalModelsV2/BCR6/"
 setwd(w)
 
 #generate current predictions and plots from models
 brtplot <- function (j) {
-  load(paste(w,speclist[j],"brt8.R",sep=""))
+  load(paste(w,speclist[j],"brt6a.R",sep=""))
   varimp <- as.data.frame(brt1$contributions)
-  write.csv(varimp,file=paste(w,speclist[j],"varimp8.csv",sep=""))
+  write.csv(varimp,file=paste(w,speclist[j],"varimp6a.csv",sep=""))
   cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
   cvstats$deviance.null <- brt1$self.statistics$mean.null
   cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
-  write.csv(cvstats,file=paste(w,speclist[j],"cvstats8.csv",sep=""))
-  pdf(paste(w,speclist[j],"_plot7.pdf",sep=""))
+  write.csv(cvstats,file=paste(w,speclist[j],"cvstats6a.csv",sep=""))
+  pdf(paste(w,speclist[j],"_plot6a.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(bs3, brt1, type="response", n.trees=brt1$n.trees)
-  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km8",sep=""), format="GTiff",overwrite=TRUE)
+  rast <- raster::predict(object=bs3, model=brt1, type="response", n.trees=brt1$n.trees)
+  writeRaster(rast, filename=paste(w,speclist[j],"_pred1km6a",sep=""), format="GTiff",overwrite=TRUE)
   
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km8.png",sep=""), height=800, width=650)
+  png(file=paste(w,speclist[j],"_pred1km6a.png",sep=""), height=800, width=650)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -159,7 +165,7 @@ brtplot <- function (j) {
   PC1 <- PC1[PC1$ABUND>0,]
   xy <- PC1[,c(7,8)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
-  png(file=paste(w,speclist[j],"_pred1km8_pts.png",sep=""), width=650, height=800)
+  png(file=paste(w,speclist[j],"_pred1km6a_pts.png",sep=""), width=650, height=800)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -172,10 +178,10 @@ brtplot <- function (j) {
 }
 
 mapplot <- function (j) {
-  rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep=""))
+  rast <- raster(paste(w,speclist[j],"_pred1km6a.tif",sep=""))
   prev <- cellStats(rast, 'mean')	
   max <- 3*prev
-  png(file=paste(w,speclist[j],"_pred1km6.png",sep=""), height=800, width=650)
+  png(file=paste(w,speclist[j],"_pred1km6a.png",sep=""), height=800, width=650)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -189,7 +195,7 @@ mapplot <- function (j) {
   PC1 <- PC1[PC1$ABUND>0,]
   xy <- PC1[,c(7,8)]
   spdf <- SpatialPointsDataFrame(coords = xy, data = PC1, proj4string = LCC)
-  png(file=paste(w,speclist[j],"_pred1km8_pts.png",sep=""), width=650, height=800)
+  png(file=paste(w,speclist[j],"_pred1km6a_pts.png",sep=""), width=650, height=800)
   par(cex.main=1.2, mfcol=c(1,1), oma=c(0,0,0,0))
   par(mar=c(0,0,5,0))
   plot(rast, col="blue", axes=FALSE, legend=FALSE, main=paste(as.character(speclist[j]),"current prediction"))
@@ -202,11 +208,11 @@ mapplot <- function (j) {
 }
 
 cvstatsum <- function (speclist) {
-  cvstats <- read.csv(paste(w,speclist[1],"cvstats8.csv",sep=""))
+  cvstats <- read.csv(paste(w,speclist[1],"cvstats6a.csv",sep=""))
   cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
   names(cvstatmean) <- c("stat",as.character(speclist[1]))
   for (j in 2:length(speclist)) {
-    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats8.csv",sep="")))
+    x<-try(cv2 <- read.csv(paste(w,speclist[j],"cvstats6a.csv",sep="")))
     if(class(x) != "try-error") {
       cvstatmean <- as.data.frame(cbind(cvstatmean,rowMeans(cv2[,2:6])))
       names(cvstatmean)[ncol(cvstatmean)] <- as.character(speclist[j])
@@ -216,7 +222,7 @@ cvstatsum <- function (speclist) {
 }
 
 for (j in 1:length(speclist)) {
-  x<-try(rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
+  x <- try(load(paste(w,speclist[j],"brt6a.R",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
@@ -242,32 +248,32 @@ for (j in 1:length(speclist)) {
   d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo[,c(1:6,9,11:18,21:26,28,30:38,40:47,49:50,52:57)])
+  datcombo <- na.omit(datcombo[,c(1:6,9,11:16,17:18,21:26,40,42:47,49:50,52:59,61:62,64:67,69)])
   
-  potvar <- datcombo[,c(3,7:45)]
+  potvar <- datcombo[,7:44]
   var <- get_cn(potvar)
   
   datcombo$wat <- as.factor(datcombo$wat)
   datcombo$urbag <- as.factor(datcombo$urbag)
   #datcombo$landform <- as.factor(datcombo$landform)
   datcombo$wet <- as.factor(datcombo$wet)
-  datcombo$ARU <- as.factor(datcombo$ARU)
+  #datcombo$ARU <- as.factor(datcombo$ARU)
 
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
+    save(brt1,file=paste(w,speclist[j],"brt6a.R",sep=""))
     brtplot(j)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
     x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.0001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
-      save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
+      save(brt1,file=paste(w,speclist[j],"brt6a.R",sep=""))
       brtplot(j)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
       x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.00001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
-        save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
+        save(brt1,file=paste(w,speclist[j],"brt6a.R",sep=""))
         brtplot(j)
       }  
     }
@@ -277,9 +283,9 @@ for (j in 1:length(speclist)) {
 }
 
 for (j in 1:length(speclist)) {
-  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
+  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km6a.tif",sep="")))
   if (class(x1) == "try-error") {
-    x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
+    x1 <- try(load(paste(w,speclist[j],"brt6a.R",sep="")))
     if (class(x1) != "try-error") {
       brtplot(j)
     }
@@ -288,11 +294,11 @@ for (j in 1:length(speclist)) {
 
 #redo maps
 for (j in 1:length(speclist)) {
-  x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
+  x1 <- try(load(paste(w,speclist[j],"brt6a.R",sep="")))
   if (class(x1) != "try-error") {
     mapplot(j)
   }
 }
 
 cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w,"_cvstats8.csv",sep=""))
+write.csv(cvstats,file=paste(w,"_cvstats6a.csv",sep=""))

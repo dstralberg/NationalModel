@@ -8,7 +8,7 @@ ROOT1 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2
 ROOT2 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/" #input BCR templates
 ROOT3 <- "I:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #output predictions
 SPP <- list.files(file.path(ROOT2, "out", PROJ))
-SPP2 <- c("BBWA","BHVI","BLJA","BLPW","BOCH","CMWA","CONW","GCKI", "GRAJ","LEFL","OVEN","OSFL","PAWA","PHVI","RUBL","SWTH","TEWA","YRWA")
+SPP2 <- c("ALFL","BAWW","BBWA","BCCH","BHVI","BLJA","BLPW","BOCH","BRCR","BTNW","CAWA","CMWA","CONW","COYE","CSWA","DEJU","GCKI", "GRAJ","LEFL","MOWA","OVEN","OSFL","PAWA","PHVI","RBNU","RCKI","REVI","RUBL","SWTH","TEWA","WETA","WIWR","YRWA")
 
 B <- 32
 u <- c(60, 61, 70, 71, 80, 81, 82, 83, 9, 10, 11, 12, 13, 14, 4, 5, 

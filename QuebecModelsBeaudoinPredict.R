@@ -1,19 +1,19 @@
 library(raster)
-library(dismo)
 library(gbm)
+library(dismo)
 library(maptools)
 library(dplyr)
 
 bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.5)
 provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 
-speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies.csv")
+speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies_longlist.csv")
 speclist <- speclist[,1]
 
-qbs2011_1km <- brick("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
+qbs2011_1km <- stack("G:/Boreal/NationalModelsV2/Quebec/QC2011rasters.grd")
 r2 <- qbs2011_1km[[1]]
 
-combo2011 <- brick("G:/Boreal/NationalModelsV2/quebec/combo2011.grd")
+combo2011 <- stack("G:/Boreal/NationalModelsV2/quebec/combo2011.grd")
 names(combo2011)[191:194] <- c("TPI","TRI","slope","roughness")
 lf <- raster("G:/Boreal/NationalModelsV2/quebec/landform.grd")
 combo2011 <- addLayer(combo2011,lf)
@@ -62,22 +62,26 @@ QCPC <- rbind(QCPC2001,QCPC2011)
 survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=25646
 survey2011 <- aggregate(QCPC2011$ABUND, by=list("PKEY"=QCPC2011$PKEY,"SS"=QCPC2011$SS), FUN=sum) #n=51916
 
-w <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/CC/CCImpacts/QuebecLANDIS/"
-setwd(w)
+w <- "I:/My Drive/BAM.SharedDrive/RshProjs/CC/CCImpacts/QuebecLANDIS/"
+
+w2 <- "G:/Boreal/NationalModelsV2/Quebec/"
+setwd(w2)
 
 #generate predictions and plots from models
 brtplot <- function (j,PC) {
-  load(paste(w,speclist[j],"brtQC7.R",sep=""))
-  varimp <- as.data.frame(brt1$contributions)
+  e <- new.env()
+  f <- file.path(w2,paste0(speclist[j],"brtQC7.RData"))
+  load(f,env=e)
+  varimp <- as.data.frame(e$brt1$contributions)
   write.csv(varimp,file=paste(w,speclist[j],"varimp7.csv",sep=""))
-  cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
-  cvstats$deviance.null <- brt1$self.statistics$mean.null
+  cvstats <- as.data.frame(e$brt1$cv.statistics[c(1,3)])
+  cvstats$deviance.null <- e$brt1$self.statistics$mean.null
   cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
   write.csv(cvstats,file=paste(w,speclist[j],"cvstats7.csv",sep=""))
   pdf(paste(w,speclist[j],"_plot7.pdf",sep=""))
   gbm.plot(brt1,n.plots=12,smooth=TRUE)
   dev.off()
-  rast <- raster::predict(combo2011, brt1, type="response", n.trees=brt1$n.trees)
+  rast <- raster::predict(object=combo2011, model=e$brt1, type="response", n.trees=e$brt1$n.trees)
   writeRaster(rast, filename=paste(w,speclist[j],"_pred1km7",sep=""), format="GTiff",overwrite=TRUE)
   
   q99 <- quantile(rast, probs=c(0.99))	
@@ -110,7 +114,9 @@ brtplot <- function (j,PC) {
   dev.off()
 }
 
-for (j in 18:20) {
+for (j in 104:length(speclist)) {
+  x1 <- try(load(paste(w2,speclist[j],"brtQC7.RData",sep="")))
+  if (class(x1) != "NULL") {
   specoff <- filter(offlc, SPECIES==as.character(speclist[j]))
   specoff <- distinct(specoff) 
   
@@ -195,7 +201,41 @@ for (j in 18:20) {
 
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 3, gbm.x = c(14,20,22,28,29,35,36,44,52,53,54,58,62,66,69,76,80,83,96,97,107,113,115,121,122,128,129,137,145,146,147,151,155,157,159,162,169,173,176,189,190,197,198,199,200,201,205), family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
-    save(brt1,file=paste(w,speclist[j],"brtQC7.R",sep=""))
-    brtplot(j,PC)
+    save(brt1,file=paste(w2,speclist[j],"brtQC7.RData",sep=""))
   }
   }
+}
+
+
+for (j in 1:length(speclist)) {
+  x1 <- try(load(paste(w2,speclist[j],"brtQC7.RData",sep="")))
+  if (class(x1) != "NULL") {
+  specoff <- filter(offlc, SPECIES==as.character(speclist[j]))
+  specoff <- distinct(specoff) 
+  
+  specdat2001 <- filter(QCPC2001, SPECIES == as.character(speclist[j]))
+  specdat2001x <- aggregate(specdat2001$ABUND,by=list("PKEY"=specdat2001$PKEY,"SS"=specdat2001$SS), FUN=sum)
+  names(specdat2001x)[3] <- "ABUND"
+  dat1 <- right_join(specdat2001x,survey2001[,1:3],by=c("SS","PKEY")) 
+  dat1$SPECIES <- as.character(speclist[j])
+  dat1$ABUND <- as.integer(ifelse(is.na(dat1$ABUND),0,dat1$ABUND)) 
+  dat11 <- distinct(dat1,SS,.keep_all=TRUE) #randomly select one survey for analysis
+  s2001 <- left_join(dat11,specoff, by=c("SPECIES","PKEY"))
+  d2001 <- left_join(s2001, dat2001, by=c("SS")) 
+  
+  specdat2011 <- filter(QCPC2011, SPECIES == as.character(speclist[j])) 
+  specdat2011x <- aggregate(specdat2011$ABUND,by=list("PKEY"=specdat2011$PKEY,"SS"=specdat2011$SS), FUN=sum)
+  names(specdat2011x)[3] <- "ABUND"  
+  dat2 <- right_join(specdat2011x,survey2011[,1:3],by=c("SS","PKEY"))
+  dat2$SPECIES <- as.character(speclist[j])
+  dat2$ABUND <- as.integer(ifelse(is.na(dat2$ABUND),0,dat2$ABUND)) 
+  dat22 <- distinct(dat2,SS,.keep_all=TRUE) #randomly select one survey for analysis
+  s2011 <- left_join(dat22,specoff, by=c("SPECIES","PKEY"))
+  d2011 <- left_join(s2011, dat2011, by=c("SS")) 
+  
+  PC <- rbind(dat11,dat22)
+  PC <- left_join(PC,QCPC[,c(1,4,7,8)],by=c("PKEY", "SS"))
+  brtplot(j,PC)
+  }
+}
+

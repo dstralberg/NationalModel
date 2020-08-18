@@ -43,7 +43,7 @@ p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
-speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
+speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
@@ -215,7 +215,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 1:length(speclist)) {
+for (j in 60:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
@@ -279,7 +279,7 @@ for (j in 1:length(speclist)) {
 for (j in 1:length(speclist)) {
   x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
   if (class(x1) == "try-error") {
-    x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
+    x1 <- try(load(paste(w,speclist[j],"brt8.R",sep="")))
     if (class(x1) != "try-error") {
       brtplot(j)
     }
@@ -288,7 +288,7 @@ for (j in 1:length(speclist)) {
 
 #redo maps
 for (j in 1:length(speclist)) {
-  x1 <- try(load(paste(w,speclist[j],"brt6.R",sep="")))
+  x1 <- try(load(paste(w,speclist[j],"brt8.R",sep="")))
   if (class(x1) != "try-error") {
     mapplot(j)
   }
