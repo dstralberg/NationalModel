@@ -4,6 +4,7 @@ library(gbm)
 library(maptools)
 library(dplyr)
 library(sf)
+library(mefa)
 
 #' Evaluate predictor sets based on hist, SD, etc
 get_cn <- function(z, rmax=0.9) {
@@ -44,7 +45,7 @@ l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
 speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
-speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
+speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
@@ -59,6 +60,12 @@ bs3 <- stack(bs,bs2011)
 ARU <- bs3[[1]]*0
 names(ARU) <- "ARU"
 bs3 <- addLayer(bs3,ARU)
+
+wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
+wet <- resample(wet250, bs, method="ngb")
+writeRaster(wet,file="G:/Boreal/NationalModelsV2/BCR6/wet1km_BCR6.tif")
+bs3 <- stack(bs3,wet)
+names(bs3[[60]]) <- "wet"
 
 bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
@@ -215,7 +222,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 60:length(speclist)) {
+for (j in 1:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
@@ -242,9 +249,9 @@ for (j in 60:length(speclist)) {
   d2011 <- left_join(s2011, dat_2011, by=c("SS")) 
 
   datcombo <- rbind(d2001,d2011)
-  datcombo <- na.omit(datcombo[,c(1:6,9,11:18,21:37,40,43:51,53:60,62:63,65:67,69)])
+  datcombo <- na.omit(datcombo[,c(1:6,11:15,18,21:32,35,37,40,42,44:48,50,52,54:59,61:62,64:67,69)])
   
-  potvar <- datcombo[,c(3,7:55)]
+  potvar <- datcombo[,c(3,7:47)]
   var <- get_cn(potvar)
   
   datcombo$wat <- as.factor(datcombo$wat)

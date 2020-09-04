@@ -20,7 +20,7 @@ for (BCR in u) {
       r1 <- raster(file.path(ROOT2, "data", "templates", paste0("bcr-template-", BCR, ".grd")))
         fout <- file.path(ROOT3,paste0("pred250-", spp, "-BCR_", BCR, "-", PROJ, "-", b, ".tif"))
         a <- try(raster(fout))
-        if(class(a) == "try-error"){
+        if(class(a) == "try-error" && !is.null(fout)){
           YS <- stack(file.path(ROOT1, "stacks250m", paste0("bcr", BCR, "all_250m.grd")))
           ARU <- YS[[1]]*0 
           YEAR <- ARU + 2011
