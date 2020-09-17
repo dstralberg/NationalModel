@@ -13,7 +13,7 @@ library(colorspace)
 bgy <- sequential_hcl(11, "ag_GrnYl",rev=TRUE)
 blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
-load("E:/BAM/BAMData/BAM_data_package_November2019.RData")
+# load("E:/BAM/BAMData/BAM_data_package_November2019.RData")
 w <-"G:/Boreal/NationalModelsV2/"
 
 p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
@@ -90,73 +90,72 @@ brtplot <- function (model,rast,type) {
   
 }
 
+models <- list.files(paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/ALFL/"),pattern="Mean.tif$")
+rast <- raster(paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/ALFL/",models[1]))
 
+# topog <-brick(paste(w,"topography_1km.grd",sep=""))
+# names(topog) <- c("TPI","TRI","slope","roughness","lf")
+# 
+# landcover <- brick(paste(w,"landcov_1km.grd",sep=""))
+# 
+# road1k <- raster("E:/GIS/disturbance/VenterEtAlFootprint/RoadsLCC.tif")
+# ROAD <- crop(road1k,rast)
+# ROAD <- resample(ROAD,rast,method="ngb")
+# projection(ROAD) <- LCC
+# 
+# biomass <- brick(paste(w,"bs2011_1km.grd",sep=""))
+# landscape <- brick(paste(w,"bs2011_750_1km.grd",sep=""))
+# names(landscape) <- gsub("LandCover","Landsc750",names(landscape))
+# 
+# cur <- "E:/Climate/CMIP5/baseline19812010/"
+# setwd(cur)
+# clim <- list.files(cur, pattern =".asc$")
+# curclim<-stack(clim)
+# 
+# setwd(w)
+# 
+# SS <- cbind(SScombo, extract(landcover, SScombo[,2:3]))
+# SS <- cbind(SS, extract(road1k, SScombo[,2:3]))
+# names(SS)[ncol(SS)] <- "ROAD"
+# SS <- cbind(SS, extract(topog, SScombo[,2:3]))
+# SS <- cbind(SS, extract(biomass, SScombo[,2:3]))
+# SS <- cbind(SS, extract(landscape, SScombo[,2:3]))
+# 
+# 
+# samprast <- rasterize(cbind(SScombo$X,SScombo$Y), rast, field=1, fun='sum', background=0)
+# samprast <- mask(samprast,rast)
+# bs <- stack(samprast)
+# names(bs) <-"samp"
+# 
+# clim1 <- mask(crop(curclim,rast),rast)
+# landcov1 <- mask(crop(landcover,rast),rast)
+# topo1 <- mask(crop(topog,rast),rast)
+# landscape1 <- mask(crop(landscape,rast),rast)
+# biomass1 <- mask(crop(biomass,rast),rast)
+# ROAD1 <- mask(ROAD,rast)
+# 
+# bs <- addLayer(bs, ROAD1)
+# names(bs)[nlayers(bs)] <- "ROAD"
+# for (j in 1:nlayers(topo1)) {
+#   bs <- addLayer(bs, topo1[[j]])}
+# for (j in 1:nlayers(landcov1)) {
+#   bs <- addLayer(bs, landcov1[[j]])}
+# for (j in 1:nlayers(biomass1)) {
+#   bs <- addLayer(bs, biomass1[[j]])}
+# for (j in 1:nlayers(landscape1)) {
+#   bs <- addLayer(bs, landscape1[[j]])}
+# for (j in 1:nlayers(clim1)) {
+#   bs <- addLayer(bs, clim1[[j]])}
+# 
+# writeRaster(bs,file=paste0(w,"rasters2011_all.grd"),overwrite=TRUE)
+bs <- stack(paste0(w,"rasters2011_all.grd"))
+# 
+# samp1kk <- sampleRandom(bs, size=100000, sp=TRUE)
+# samp1kk$pres <- ifelse(samp1kk$samp > 0, 1, 0)
+# samp1kkdf <- as.data.frame(samp1kk)
+# write.csv(samp1kkdf,file=paste0(w,"surveysample1kk.csv"),row.names=FALSE)
 
-
-topog <-brick(paste(w,"topography_1km.grd",sep=""))
-names(topog) <- c("TPI","TRI","slope","roughness","lf")
-
-landcover <- brick(paste(w,"landcov_1km.grd",sep=""))
-
-road1k <- raster("E:/GIS/disturbance/VenterEtAlFootprint/RoadsLCC.tif")
-ROAD <- crop(road1k,rast)
-ROAD <- resample(ROAD,rast,method="ngb")
-projection(ROAD) <- LCC
-
-biomass <- brick(paste(w,"bs2011_1km.grd",sep=""))
-landscape <- brick(paste(w,"bs2011_750_1km.grd",sep=""))
-names(landscape) <- gsub("LandCover","Landsc750",names(landscape))
-
-cur <- "E:/CMIP5/baseline19812010/"
-setwd(cur)
-clim <- list.files(cur, pattern =".asc$")
-curclim<-stack(clim)
-
-setwd(w)
-
-SS <- cbind(SScombo, extract(landcover, SScombo[,2:3]))
-SS <- cbind(SS, extract(road1k, SScombo[,2:3]))
-names(SS)[ncol(SS)] <- "ROAD"
-SS <- cbind(SS, extract(topog, SScombo[,2:3]))
-SS <- cbind(SS, extract(biomass, SScombo[,2:3]))
-SS <- cbind(SS, extract(landscape, SScombo[,2:3]))
-
-models <- list.files(paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/",specpred[2],"/"),pattern="Mean.tif$")
-rast <- raster(paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/",specpred[2],"/",models[1]))
-
-samprast <- rasterize(cbind(SScombo$X,SScombo$Y), rast, field=1, fun='sum', background=0)
-samprast <- mask(samprast,rast)
-bs <- stack(samprast)
-names(bs) <-"samp"
-
-clim1 <- mask(crop(curclim,rast),rast)
-landcov1 <- mask(crop(landcover,rast),rast)
-topo1 <- mask(crop(topog,rast),rast)
-landscape1 <- mask(crop(landscape,rast),rast)
-biomass1 <- mask(crop(biomass,rast),rast)
-ROAD1 <- mask(ROAD,rast)
-
-bs <- addLayer(bs, ROAD1)
-names(bs)[nlayers(bs)] <- "ROAD"
-for (j in 1:nlayers(topo1)) {
-  bs <- addLayer(bs, topo1[[j]])}
-for (j in 1:nlayers(landcov1)) {
-  bs <- addLayer(bs, landcov1[[j]])}
-for (j in 1:nlayers(biomass1)) {
-  bs <- addLayer(bs, biomass1[[j]])}
-for (j in 1:nlayers(landscape1)) {
-  bs <- addLayer(bs, landscape1[[j]])}
-for (j in 1:nlayers(clim1)) {
-  bs <- addLayer(bs, clim1[[j]])}
-
-
-writeRaster(bs,file=paste0(w,"rasters2011_all"),overwrite=TRUE)
-bs <- stack(paste0(w,"rasters2011_all"))
-
-samp1kk <- sampleRandom(bs, size=100000, sp=TRUE)
-samp1kk$pres <- ifelse(samp1kk$samp > 0, 1, 0)
-samp1kkdf <- as.data.frame(samp1kk)
-write.csv(samp1kkdf,file=paste0(w,"surveysample1kk.csv"),row.names=FALSE)
+samp1kkdf <- read.csv(paste0(w,"surveysample1kk.csv"))
 
 potvar <- samp1kkdf[,2:222]
 var <- get_cn(potvar)
@@ -202,7 +201,9 @@ predprob4 <- raster(paste0(w,"survey_binomial_noroad.tif"))
 load(paste0(w,"survey_binomial_noroad.RData"))
 brtplot(brt4, predprob4, "binomial_noroad")
 
-
+#MESS analysis
+sampled <- samp1kkdf[samp1kkdf$pres==1,]
+x <- try(m1 <- mess(bs[[3:222]], sampled[,3:222], full=FALSE))
 
 
             

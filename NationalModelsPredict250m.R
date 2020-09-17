@@ -17,6 +17,7 @@ u <- c(60, 61, 70, 71, 80, 81, 82, 83, 9, 10, 11, 12, 13, 14, 4, 5,
 for (BCR in u) {
   for (b in 1:B) {
     for (spp in SPP2) {
+      gc()
       r1 <- raster(file.path(ROOT2, "data", "templates", paste0("bcr-template-", BCR, ".grd")))
         fout <- file.path(ROOT3,paste0("pred250-", spp, "-BCR_", BCR, "-", PROJ, "-", b, ".tif"))
         a <- try(raster(fout))

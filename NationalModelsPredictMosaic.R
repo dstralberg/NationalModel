@@ -202,7 +202,7 @@ brtplot6 <- function (rast,spec,range) {
 }
 
 setwd(w)
-for (i in 90:151){
+for (i in 2:151){
     models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
     rast <- raster(paste0(w,specpred[i],"/",models[1]))
     spec <- substr(models[1],6,9)

@@ -114,7 +114,7 @@ brtplot <- function (j,PC) {
   dev.off()
 }
 
-for (j in 104:length(speclist)) {
+for (j in 1:length(speclist)) {
   x1 <- try(load(paste(w2,speclist[j],"brtQC7.RData",sep="")))
   if (class(x1) != "NULL") {
   specoff <- filter(offlc, SPECIES==as.character(speclist[j]))

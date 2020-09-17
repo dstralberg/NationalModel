@@ -49,8 +49,8 @@ speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
-# bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
-bs2011 <- stack(paste(w,"bcr6_2011rasters250_2.grd",sep=""))
+bs2001 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2001rasters250.grd")
+bs2011 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters250_2.grd")
 # bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 bs<-stack("G:/Boreal/NationalModelsV2/bcr6clim_1km.grd")
 #bs2 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2011rasters1km.grd")
@@ -61,12 +61,14 @@ ARU <- bs3[[1]]*0
 names(ARU) <- "ARU"
 bs3 <- addLayer(bs3,ARU)
 
-wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
-wet <- resample(wet250, bs, method="ngb")
-writeRaster(wet,file="G:/Boreal/NationalModelsV2/BCR6/wet1km_BCR6.tif")
-bs3 <- stack(bs3,wet)
-names(bs3[[60]]) <- "wet"
+# wet250 <- raster("G:/Boreal/NationalModelsV2/BCR6/wet250_BCR6.tif")
+# wet <- resample(wet250, bs, method="ngb")
+# writeRaster(wet,file="G:/Boreal/NationalModelsV2/BCR6/wet1km_BCR6.tif")
+# bs3 <- stack(bs3,wet)
+# names(bs3[[60]]) <- "wet"
 
+w <-"G:/Boreal/NationalModelsV2/BCR6/"
+setwd(w)
 bs2011_1km <- stack(paste(w,"bcr6_2011rasters1km.grd",sep=""))
 r2 <- bs2011_1km[[1]]
 
@@ -131,9 +133,6 @@ dat_2001 <- cbind(dat2001,extract(sampsum25,as.matrix(cbind(dat2001$X,dat2001$Y)
 names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
 dat_2001$wt <- 1/dat_2001$sampsum25
 dat_2001$SS <- as.character(dat_2001$SS) #n=18837
-
-w <-"G:/Boreal/NationalModelsV2/BCR6/"
-setwd(w)
 
 #generate current predictions and plots from models
 brtplot <- function (j) {
@@ -222,7 +221,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 1:length(speclist)) {
+for (j in 28:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))
@@ -263,19 +262,19 @@ for (j in 1:length(speclist)) {
   x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
   if (class(x1) != "NULL") {
     save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
-    brtplot(j)
+    #brtplot(j)
   }
   if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
     x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.0001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
     if (class(x1) != "NULL") {
       save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
-      brtplot(j)
+      #brtplot(j)
     }
     if(class(x1)=="NULL"){ #retry models that didn't converge with smaller learning rate
       x1 <- try(brt1 <- gbm.step(datcombo, gbm.y = 4, gbm.x = var, family = "poisson", tree.complexity = 3, learning.rate = 0.00001, bag.fraction = 0.5, offset=datcombo$logoffset, site.weights=datcombo$wt))
       if (class(x1) != "NULL") {
         save(brt1,file=paste(w,speclist[j],"brt8.R",sep=""))
-        brtplot(j)
+        #brtplot(j)
       }  
     }
   gc()
@@ -284,7 +283,7 @@ for (j in 1:length(speclist)) {
 }
 
 for (j in 1:length(speclist)) {
-  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km6.tif",sep="")))
+  x1 <- try(r<-raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
   if (class(x1) == "try-error") {
     x1 <- try(load(paste(w,speclist[j],"brt8.R",sep="")))
     if (class(x1) != "try-error") {
