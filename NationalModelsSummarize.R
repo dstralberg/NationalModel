@@ -21,16 +21,18 @@ a <- raster(paste0(w,"ALFL/",models[1]))
 # writeRaster(bcrr,file="G:/Boreal/NationalModelsV2/bcrr.tif",overwrite=TRUE)
 landcov <- raster("G:/Boreal/NationalModelsV2/lcr.tif")
 lc <- crop(landcov,a)
+lc <- mask(lc,a)
 units <- raster("G:/Boreal/NationalModelsV2/bcrr.tif")
 bc <- crop(units,a)
+bc <- mask(bc,a)
 lu <- read.csv("G:/Boreal/NationalModelsV2/landcov.csv")
 names(lu) <- c("nalc","landcover")
 
-bbcr <- shapefile("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/BCR_BAMSubunits_LCC.shp")
-bbcrr <- rasterize(bbcr,a)
+# bbcr <- shapefile("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/BCR_BAMSubunits_LCC.shp")
+# bbcrr <- rasterize(bbcr,a)
 
 
-sumdens <- function(species,landcov,units){
+sumdens <- function(species,lc,bc){
   setwd(paste0(w,species,"/"))
   models <- list.files(paste0(w,species,"/"),pattern=".tif")
   models <- grep("-SD.tif",models,invert=TRUE,value=TRUE) 
@@ -73,60 +75,10 @@ sumdens <- function(species,landcov,units){
 }
 
 
-plotdens <- function (models,landcov,units){
-for (i in 1:length(models)){
-  spec <- paste0(substr(models[i],6,9),substr(models[i],15,20))  
-  densmean <- read.csv(paste(w,spec,"_densities.csv",sep=""))
-  png(filename=paste0(w,specpred,"/",spec,"_densityplot.png"),width=1800,height=1800,res=216)
-  p<-ggplot(densmean,aes(x=landcover,y=mean))+
-    geom_bar(aes(fill=landcover),width=densmean$areaprop*2, stat="identity")+
-    xlab("Land cover type")+
-    ylab("Mean density (males/ha)")+
-    theme(legend.position = "none")+
-    theme(axis.text.x=element_text(angle=90,vjust=0.4))+
-    ylim(0,0.5*max(densmean$mean,na.rm=TRUE))+
-    facet_wrap(~BCR,ncol=4)
-  print(p)
-  dev.off()
-}
-}
-  
-boxplotdens <- function(models,landcov,units){
-bcrv <- getValues(units)
-lcv <- getValues(landcov)
-for (i in 1:length(models)){
-  rast <- raster(models[i])
-  spec <- paste0(substr(models[i],6,9),substr(models[i],15,20))  
-  pred <- getValues(rast)
-  pred1 <- as.data.frame(cbind(bcrv,lcv,pred))
-  pred1 <- pred1[pred1$bcrv>0,]
-  pred1 <- na.omit(pred1)
-  names(pred1) <- c("BCR","nalc","pred")
-  #pred1$lcv <- as.factor(pred1$lcv)
-  pred1 <- left_join(pred1,lu)
-  png(filename=paste0(w,specpred,"/",spec,"_boxplot.png",sep=""),width=2200,height=1800,res=216)
-  p<-ggplot(pred1,aes(x=landcover,y=pred))+
-    geom_boxplot()+
-    xlab("Land cover type")+
-    ylab("Mean density (males/ha)")+
-    theme(legend.position = "none")+
-    theme(axis.text.x=element_text(angle=90,vjust=0.4))+
-    facet_wrap(~BCR,ncol=4)
-  print(p)
-  dev.off()
-}
-}
-
 for (j in 2:length(specpred)) {
   species<-specpred[j]
-  d <- sumdens(species,landcov,bbcr)
-  write.csv(d,file=paste0(w,species,"/",species,"_densities_subunit.csv"),row.names=FALSE)
-  #boxplotdens(species,landcov,units)
-  #plotdens(species,landcov,units)
+  d <- sumdens(species,lc,bc)
+  write.csv(d,file=paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/summaries/",species,"_densities.csv"),row.names=FALSE)
 }
 
-for (j in 2:length(specpred)) {
-  species<-specpred[j]
-  d <- read.csv(paste0(w,species,"/",species,"_densities.csv"))
-  write.csv(d,file=paste0("F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/",species,"_densities.csv"),row.names=FALSE)
-}         
+

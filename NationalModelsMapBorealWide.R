@@ -34,7 +34,6 @@ bcrc <- crop(bcr,rast)
 
 subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
 subr <- rasterize(subunits,rast)
-#writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
 #summarize mean densities
 # prev <- data.frame("species"=specpred[2:length(specpred)],"meandens"=0)
@@ -64,7 +63,7 @@ subr <- rasterize(subunits,rast)
 #   dev.off()
 # }
 
-brtplot1 <- function (rast,spec) {
+brtplot1 <- function (rast,rast1,spec) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.001)
   zmin <- min(zmin,0.01)
@@ -75,16 +74,16 @@ brtplot1 <- function (rast,spec) {
   par(cex.main=1.8, mfcol=c(1,1), mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(bcr, col=NA, border="dark gray", add=TRUE)
   plot(p, col="black", add=TRUE)
   dev.off()
 }
 
-brtplot2 <- function (rast,spec) {
+brtplot2 <- function (rast,rast1,spec) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.005)
   zmin <- min(zmin,0.05)
@@ -95,9 +94,9 @@ brtplot2 <- function (rast,spec) {
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, add=TRUE, legend=FALSE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, add=TRUE, legend=FALSE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(bcr, col=NA, border="dark gray", add=TRUE)
   plot(p, col="black", add=TRUE)
@@ -105,13 +104,13 @@ brtplot2 <- function (rast,spec) {
 }
 
 #maps with range boundaries and occurrence points
-brtplot3 <- function (rast,spec,range) {
+brtplot3 <- function (rast,rast1,spec,range) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.005)
   zmin <- min(zmin,0.05)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  PC1 <- PCmatch[PCmatch$SPECIES==substr(spec,1,4),]
   occur <- left_join(PC1,SScombo,by="SS")
   occur <- occur[occur$ABUND > 0,]
   occur <- na.omit(occur)
@@ -122,9 +121,9 @@ brtplot3 <- function (rast,spec,range) {
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(range, col=NA, border="dark blue", add=TRUE)
   plot(p, col="black", add=TRUE)
@@ -132,13 +131,13 @@ brtplot3 <- function (rast,spec,range) {
   dev.off()
 }
 
-brtplot4 <- function (rast,spec,range) {
+brtplot4 <- function (rast,rast1,spec,range) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.001)
   zmin <- min(zmin,0.01)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  PC1 <- PCmatch[PCmatch$SPECIES==substr(spec,1,4),]
   occur <- left_join(PC1,SScombo,by="SS")
   occur <- occur[occur$ABUND > 0,]
   occur <- na.omit(occur)
@@ -149,9 +148,9 @@ brtplot4 <- function (rast,spec,range) {
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(range, col=NA, border="dark blue", add=TRUE)
   plot(p, col="black", add=TRUE)
@@ -160,7 +159,7 @@ brtplot4 <- function (rast,spec,range) {
 }
 
 
-brtplot5 <- function (rast,spec) {
+brtplot5 <- function (rast,rast1,spec) {
   prev <- cellStats(rast, 'mean')	
   zmin <- min(prev,0.001)
   q99 <- quantile(rast, probs=c(0.999))
@@ -170,21 +169,21 @@ brtplot5 <- function (rast,spec) {
   par(cex.main=1.8, mfcol=c(1,1), mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(bcr, col=NA, border="dark gray", add=TRUE)
   plot(p, col="black", add=TRUE)
   dev.off()
 }
 
-brtplot6 <- function (rast,spec,range) {
+brtplot6 <- function (rast,rast1,spec,range) {
   prev <- cellStats(rast, 'mean')	
   zmin <- min(prev,0.001)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  PC1 <- PCmatch[PCmatch$SPECIES==substr(spec,1,4),]
   occur <- left_join(PC1,SScombo,by="SS")
   occur <- occur[occur$ABUND > 0,]
   occur <- na.omit(occur)
@@ -195,9 +194,9 @@ brtplot6 <- function (rast,spec,range) {
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
-  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast1, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast1, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(range, col=NA, border="dark blue", add=TRUE)
   plot(p, col="black", add=TRUE)
@@ -205,35 +204,34 @@ brtplot6 <- function (rast,spec,range) {
   dev.off()
 }
 
+models1 <- list.files(paste0("G:/Boreal/NationalModelsV2/AllCanada/"),pattern="Mean.tif$")
+
 setwd(w)
-for (i in 2:152){
-    models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-    rast <- raster(paste0(w,specpred[i],"/",models[1]))
+for (i in 1:3){
+    rast1 <- raster(paste0("G:/Boreal/NationalModelsV2/AllCanada/",models1[i]))
+    rast1 <- mask(rast1,subr)
+    spec <- substr(models1[i],1,4)
+    models <- list.files(paste0(w,spec,"/"),pattern="Mean.tif$")
+    rast <- raster(paste0(w,spec,"/",models[1]))
     rast <- mask(rast,subr)
-    spec <- substr(models[1],6,9)
     x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-    brtplot1(rast,spec)
-    brtplot2(rast,spec)
-    brtplot5(rast,spec)
+    spec <- substr(models1[i],1,8)
+    brtplot1(rast,rast1,spec)
+    brtplot2(rast,rast1,spec)
+    brtplot5(rast,rast1,spec)
     if (class(x1)!="try-error"){
       range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot3(rast,spec,range))
+      try(brtplot3(rast,rast1,spec,range))
     }
     if (class(x1)!="try-error"){
       range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot4(rast,spec,range))
+      try(brtplot4(rast,rast1,spec,range))
     }
     if (class(x1)!="try-error"){
       range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot6(rast,spec,range))
+      try(brtplot6(rast,rast1,spec,range))
     }
 }
 gc()
 
 
-for (i in 2:152){
-  models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-  rast <- raster(paste0(w,specpred[i],"/",models[1]))
-  rast <- mask(rast,subr)
-  writeRaster(rast,file = paste0("G:/Boreal/NationalModelsV2/Zonation/spatial-layers/",specpred[i],"MeanCrop.tif"),overwrite=TRUE)
-  }
