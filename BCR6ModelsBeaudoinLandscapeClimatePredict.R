@@ -221,7 +221,7 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
-for (j in 28:length(speclist)) {
+for (j in 1:length(speclist)) {
   x<-try(rast <- raster(paste(w,speclist[j],"_pred1km8.tif",sep="")))
   if(class(x)=="try-error"){
   specoff <- filter(off6, SPECIES==as.character(speclist[j]))

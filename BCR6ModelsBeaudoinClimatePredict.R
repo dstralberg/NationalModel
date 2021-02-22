@@ -4,8 +4,10 @@ library(gbm)
 library(maptools)
 library(dplyr)
 library(sf)
+library(data.table)
 
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
+varimpclasses <- read.csv("G:/Boreal/NationalModelsV2/BCR6/varimpclasses.csv")
 
 #' Evaluate predictor sets based on hist, SD, etc
 get_cn <- function(z, rmax=0.9) {
@@ -48,7 +50,7 @@ lc <- crop(l,bcr6)
 speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
-#speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
+speclist <- speclist[c(1:2,4:length(speclist))]
 
 # bs2001 <- stack(paste(w,"bcr6_2001rasters250.grd",sep=""))
 # bs2011 <- stack(paste(w,"bcr6_2011rasters250.grd",sep=""))
@@ -221,6 +223,41 @@ cvstatsum <- function (speclist) {
   return(cvstatmean)
 }
 
+varimpsum <- function (speclist) {
+  varimp <- read.csv(paste(w,speclist[1],"varimp6a.csv",sep=""))
+  varimp$SPEC <- speclist[1]
+  for (j in 2:length(speclist)) {
+    x<-try(varimp1 <- read.csv(paste(w,speclist[j],"varimp6a.csv",sep="")))
+    if(class(x)!="try-error"){
+    varimp1$SPEC <- speclist[j]
+    varimp <- rbind(varimp,varimp1)
+    }
+    }
+  varimp <- merge(varimp,varimpclasses,by="var")
+  return(varimp)
+}
+
+cvstats2 <- function (speclist) {
+  x <- try(load(paste(w,speclist[1],"brt6a.R",sep="")))
+  varimp <- read.csv(paste(w,speclist[1],"varimp6a.csv",sep=""))
+  cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
+  cvstats$deviance.null <- brt1$self.statistics$mean.null
+  cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
+  cvstats$SPEC <- speclist[1]
+  for (j in 2:length(speclist)) {
+    x <- try(load(paste(w,speclist[j],"brt6a.R",sep="")))
+    if(class(x)!="try-error"){
+    varimp <- read.csv(paste(w,speclist[j],"varimp6a.csv",sep=""))
+    cvstats1 <- as.data.frame(brt1$cv.statistics[c(1,3)])
+    cvstats1$deviance.null <- brt1$self.statistics$mean.null
+    cvstats1$deviance.exp <- (cvstats1$deviance.null-cvstats1$deviance.mean)/cvstats1$deviance.null
+    cvstats1$SPEC <- speclist[j]
+    cvstats <- rbind(cvstats,cvstats1)
+    }
+  }
+  return(cvstats)
+}
+
 for (j in 1:length(speclist)) {
   x <- try(load(paste(w,speclist[j],"brt6a.R",sep="")))
   if(class(x)=="try-error"){
@@ -300,5 +337,13 @@ for (j in 1:length(speclist)) {
   }
 }
 
-cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w,"_cvstats6a.csv",sep=""))
+
+cvstats <- cvstats2(speclist)
+write.csv(cvstats,file=paste(w,"_cvstatsum6a.csv",sep=""))
+
+varimp <- varimpsum(speclist)
+varimpsummary <- aggregate(varimp[,3],by=list(varimp$SPEC,varimp$class),FUN=sum)
+names(varimpsummary)<- c("SPEC","varclass","rel.inf")
+varimpwide <- dcast(varimpsummary, SPEC ~ varclass)
+statscombo <- merge(cvstats,varimpwide,by="SPEC")
+write.csv(statscombo,file=paste(w,"_statscombo6a.csv",sep=""))

@@ -33,7 +33,7 @@ curclim<-stack(clim)
 rrc <- raster(paste(w,"road10.grd",sep=""))
 
 #MODIS-based landcover (250-m)
-# nalc2005 <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+# nalc2005 <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
 # nalc <- resample(nalc2005,curclim,method="ngb")
 # writeRaster(nalc,paste(w,"nalc-1km.tif",sep=""))
 # mwat <- c(0, 17.1, 0,  17.9, 18.1, 1,  18.9, 20, 0)

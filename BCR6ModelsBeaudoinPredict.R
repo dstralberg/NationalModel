@@ -12,7 +12,7 @@ p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
-speclist <- read.csv("F:/BAM/BAMDAta/SpeciesClassesModv5.csv")
+speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1|speclist$Alberta==1,]
 speclist <- speclist[,1]
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
@@ -236,5 +236,46 @@ for (j in 1:length(speclist)) {
   }
 }
 
-cvstats <- cvstatsum(speclist)
-write.csv(cvstats,file=paste(w,"_cvstats5.csv",sep=""))
+varimpsum <- function (speclist) {
+  varimp <- read.csv(paste(w,speclist[1],"varimp4.csv",sep=""))
+  varimp$SPEC <- speclist[1]
+  for (j in 2:length(speclist)) {
+    x<-try(varimp1 <- read.csv(paste(w,speclist[j],"varimp4.csv",sep="")))
+    if(class(x)!="try-error"){
+      varimp1$SPEC <- speclist[j]
+      varimp <- rbind(varimp,varimp1)
+    }
+  }
+  varimp <- merge(varimp,varimpclasses,by="var")
+  return(varimp)
+}
+
+cvstats2 <- function (speclist) {
+  x <- try(load(paste(w,speclist[1],"brt4.R",sep="")))
+  varimp <- read.csv(paste(w,speclist[1],"varimp4.csv",sep=""))
+  cvstats <- as.data.frame(brt1$cv.statistics[c(1,3)])
+  cvstats$deviance.null <- brt1$self.statistics$mean.null
+  cvstats$deviance.exp <- (cvstats$deviance.null-cvstats$deviance.mean)/cvstats$deviance.null
+  cvstats$SPEC <- speclist[1]
+  for (j in 2:length(speclist)) {
+    x <- try(load(paste(w,speclist[j],"brt4.R",sep="")))
+    if(class(x)!="try-error"){
+      varimp <- read.csv(paste(w,speclist[j],"varimp4.csv",sep=""))
+      cvstats1 <- as.data.frame(brt1$cv.statistics[c(1,3)])
+      cvstats1$deviance.null <- brt1$self.statistics$mean.null
+      cvstats1$deviance.exp <- (cvstats1$deviance.null-cvstats1$deviance.mean)/cvstats1$deviance.null
+      cvstats1$SPEC <- speclist[j]
+      cvstats <- rbind(cvstats,cvstats1)
+    }
+  }
+  return(cvstats)
+}
+
+cvstats <- cvstats2(speclist)
+varimp <- varimpsum(speclist)
+
+varimpsummary <- aggregate(varimp[,3],by=list(varimp$SPEC,varimp$class),FUN=sum)
+names(varimpsummary)<- c("SPEC","varclass","rel.inf")
+varimpwide <- dcast(varimpsummary, SPEC ~ varclass)
+statscombo <- merge(cvstats,varimpwide,by="SPEC")
+write.csv(statscombo,file=paste(w,"_statscombo4.csv",sep=""))

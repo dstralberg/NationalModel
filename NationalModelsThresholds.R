@@ -34,7 +34,6 @@ bcrc <- crop(bcr,rast)
 
 subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
 subr <- rasterize(subunits,rast)
-#writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
 
 brtplotmean <- function (rast,spec,range) {

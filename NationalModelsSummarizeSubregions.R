@@ -26,7 +26,7 @@ units <- rasterize(bcr,a,field="BCR")
 lu <- read.csv("G:/Boreal/NationalModelsV2/landcov.csv")
 names(lu) <- c("nalc","landcover")
 
-#bbcr <- shapefile("I:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/BCR_BAMSubunits_LCC.shp")
+bbcr <- shapefile("I:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/BCR_BAMSubunits.shp")
 #bbcrr <- rasterize(bbcr,a)
 
 
