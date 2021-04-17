@@ -162,33 +162,31 @@ for (b in 1:B) {
 for (b in 1:B) {
   for (BCR in u) {
     spectrend <- data.frame(SPP,trend=0)
-    j<-1
-    for (spp in SPP) {
-      abund <-data.frame(YEAR=0,SPECIES=spp,abund=0)
+    for (j in 1:length(SPP)) {
+      abund <-data.frame(YEAR=0,SPECIES=SPP[j],abund=0)
       i<-1
       for (YR in 1996:2016) {
-        x <- try(pred <- raster(paste0(ROOT2, "out/", "parts/", spp,"/pred-", YR, "-", spp, "-BCR_", BCR, "-", PROJ, "-", b, ".tif")))
+        x <- try(pred <- raster(paste0(ROOT2, "out/", "parts/", SPP[j],"/pred-", YR, "-", SPP[j], "-BCR_", BCR, "-", PROJ, "-", b, ".tif")))
         pred <- mask(pred,abbcr6)
         if (class(x) !="try-error") {
         abund[i,3] <- 200*cellStats(pred,stat='sum')
         abund[i,1] <- YR
-        abund[i,2] <- spp
+        abund[i,2] <- SPP[j]
         }
         i<-i+1
       }
       if (class(x) != "try-error"){
       tm <- lm(abund$abund ~ abund$YEAR)
       trend <- (tm$coefficients[2]/max(abund$abund))
-      png(file=paste0(ROOT2,"out/","parts/",spp,"/",spp,"_BCR",BCR,"_1996-2016_trend.png"), width=2600, height=1600, res=216)
+      png(file=paste0(ROOT2,"out/","parts/",SPP[j],"/",SPP[j],"_BCR",BCR,"AB_1996-2016_trend.png"), width=2600, height=1600, res=216)
       par(0,0,3,0)
-      plot(abund$YEAR, abund$abund, type="l", xlab="YEAR",ylab="Abundance", main=paste0(spp,", trend = ", signif(trend,3)))
+      plot(abund$YEAR, abund$abund, type="l", xlab="YEAR",ylab="Abundance", main=paste0(SPP[j],", trend = ", signif(trend,3)))
       abline(tm$coefficients[1], tm$coefficients[2], col="red")
       #text(1998, 1000, label=paste0("trend = ", signif(trend,3)))
       dev.off()
       spectrend[j,2] <-trend}
-      j<-j+1
     }
-    write.csv(spectrend, file=paste0(ROOT2,"out/","parts/_BCR",BCR,"_1996-2016_trend.csv"),row.names=FALSE )
+    write.csv(spectrend, file=paste0(ROOT2,"out/","parts/_BCR",BCR,"_bs",b,"AB_1996-2016_trend.csv"),row.names=FALSE )
   }
 }
 
