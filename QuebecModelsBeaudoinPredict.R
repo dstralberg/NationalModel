@@ -7,7 +7,7 @@ library(data.table)
 
 bluegreen.colors <- colorRampPalette(c("#FFFACD", "lemonchiffon","#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.5)
 provstate <- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
-varimpclasses <- read.csv("G:/Boreal/NationalModelsV2/BCR6/varimpclasses.csv")
+#varimpclasses <- read.csv("G:/Boreal/NationalModelsV2/BCR6/varimpclasses.csv")
 
 speclist <- read.csv("G:/Boreal/NationalModelsV2/Quebec/QCspecies_longlist.csv")
 speclist <- speclist[,1]
@@ -262,7 +262,7 @@ varimpsum <- function (speclist) {
       varimp <- rbind(varimp,varimp1)
     }
   }
-  varimp <- merge(varimp,varimpclasses,by="var")
+  #varimp <- merge(varimp,varimpclasses,by="var")
   return(varimp)
 }
 
@@ -290,10 +290,10 @@ cvstats2 <- function (speclist) {
 cvstats <- cvstats2(speclist)
 varimp <- varimpsum(speclist)
 
-varimpsummary <- aggregate(varimp[,3],by=list(varimp$SPEC,varimp$class),FUN=sum)
-names(varimpsummary)<- c("SPEC","varclass","rel.inf")
-varimpwide <- dcast(varimpsummary, SPEC ~ varclass)
+varimpsummary <- aggregate(varimp[,3],by=list(varimp$SPEC,varimp$var),FUN=sum)
+names(varimpsummary)<- c("SPEC","var","rel.inf")
+varimpwide <- dcast(varimpsummary, SPEC ~ var)
 statscombo <- merge(cvstats,varimpwide,by="SPEC")
-write.csv(cvstats,file=paste(w,"v8NoUrban/","_statscombo8.csv",sep=""))
+write.csv(statscombo,file=paste(w,"v8NoUrban/","_statscombo8.csv",sep=""))
 
 

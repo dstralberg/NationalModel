@@ -47,7 +47,7 @@ p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
-speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
+speclist <- read.csv("D:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
 speclist <- speclist[c(1:2,4:length(speclist))]
@@ -209,6 +209,23 @@ mapplot <- function (j) {
   dev.off()
 }
 
+prev <- function (speclist) {
+  rast <- raster(paste(w,speclist[1],"_pred1km6a.tif",sep=""))
+  prev <- cellStats(rast, 'mean')	
+  med <- quantile(rast, probs = c(0.5))
+  prevtab <- data.frame("spec"=speclist[1],"meandens"=prev,"meddens"=as.numeric(med))
+  for (j in 2:length(speclist)){
+    x1 <- try(rast<-raster(paste(w,speclist[j],"_pred1km6a.tif",sep="")))
+    if(class(x1) != "try-error") {
+    prev <- cellStats(rast, 'mean')	
+    med <- quantile(rast, probs = c(0.5))
+    prevtab1 <- data.frame("spec"=speclist[j],"meandens"=prev,"meddens"=as.numeric(med))
+    prevtab <- rbind(prevtab,prevtab1)
+  }
+  }
+  return(prevtab)
+}
+
 cvstatsum <- function (speclist) {
   cvstats <- read.csv(paste(w,speclist[1],"cvstats6a.csv",sep=""))
   cvstatmean <- as.data.frame(cbind(as.character(cvstats[,1]),rowMeans(cvstats[,2:6])))
@@ -337,6 +354,8 @@ for (j in 1:length(speclist)) {
   }
 }
 
+prevtab <- prev(speclist)
+write.csv(prevtab,file=paste(w,"_prevtab6a.csv",sep=""))
 
 cvstats <- cvstats2(speclist)
 write.csv(cvstats,file=paste(w,"_cvstatsum6a.csv",sep=""))
@@ -347,3 +366,4 @@ names(varimpsummary)<- c("SPEC","varclass","rel.inf")
 varimpwide <- dcast(varimpsummary, SPEC ~ varclass)
 statscombo <- merge(cvstats,varimpwide,by="SPEC")
 write.csv(statscombo,file=paste(w,"_statscombo6a.csv",sep=""))
+
