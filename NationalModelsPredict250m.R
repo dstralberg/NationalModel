@@ -1,12 +1,12 @@
-library(parallel) #not used
 library(gbm)
 library(raster)
 library(rgdal)
 
 PROJ <- "boot"
+#ROOT1 and ROOT2 (inputs) should be local drives. ROOT3 (outputs) can be mapped as a virtual drive
 ROOT1 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #input models
 ROOT2 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/" #input BCR templates
-ROOT3 <- "I:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #output predictions
+ROOT3 <- "H:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #output predictions
 SPP <- list.files(file.path(ROOT2, "out", PROJ))
 SPP2 <- c("ALFL","BAWW","BBWA","BCCH","BHVI","BLJA","BLPW","BOCH","BRCR","BTNW","CAWA","CMWA","CONW","COYE","CSWA","DEJU","GCKI", "GRAJ","LEFL","MOWA","OVEN","OSFL","PAWA","PHVI","RBNU","RCKI","REVI","RUBL","SWTH","TEWA","WETA","WIWR","YRWA")
 

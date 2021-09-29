@@ -44,9 +44,10 @@ p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
 lc <- crop(l,bcr6)
 
-speclist <- read.csv("E:/BAM/BAMDAta/SpeciesClassesModv5.csv")
+speclist <- read.csv("D:/BAM/BAMDAta/SpeciesClassesModv5.csv")
 speclist <- speclist[speclist$NWT==1,]
 speclist <- speclist[,1]
+speclist <- c(speclist,"BOWA","CONW","LEYE","ATTW")
 #speclist <- as.factor(c(as.character(speclist),"CAWA","RUBL"))
 
 bs2001 <- stack("G:/Boreal/NationalModelsV2/BCR6/bcr6_2001rasters250.grd")
