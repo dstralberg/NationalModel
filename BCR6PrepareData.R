@@ -7,8 +7,9 @@ library(reshape2)
 LCC <- CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 w <-"G:/Boreal/NationalModelsV2/BCR6/"
 bcr6 <- raster("G:/Boreal/NationalModelsV2/BCR6/bcr6.tif")
+prov <- rgdal::readOGR("E:/GIS/basemaps/province_state_LCC.shp")
 
-load("F:/BAM/BAMData/BAM_data_package_November2019.RData")
+load("D:/BAM/BAMData/BAM_data_package_November2019.RData")
 
 # load("F:/BAM/BAMData/data_package_2016-04-18.Rdata")	
 # load("F:/BAM/BAMData/offsets-v3_2016-04-18.Rdata")
@@ -306,4 +307,6 @@ PKEYBCR6 <- unique(PCBCR6[,1])
 off6 <- offcombo[offcombo$PKEY %in% PKEYBCR6,] #n=16736861
 write.csv(off6,"G:/Boreal/NationalModelsV2/BCR6/BCR6offsets_v3.csv",row.names=FALSE)
 
+SSBCR6$prov <- cbind(SSBCR6,raster::extract(prov,as.matrix(cbind(SSBCR6$X,SSBCR6$Y))))
+summary(as.factor(SSBCR6$prov$STATE))
                    

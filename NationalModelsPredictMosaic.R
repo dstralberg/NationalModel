@@ -1,4 +1,5 @@
 library(raster)
+library(rgeos)
 library(dismo)
 library(rgdal)
 library(gbm)
@@ -16,7 +17,7 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
-load("E:/BAM/BAMData/BAM_data_package_November2019.RData")
+load("D:/BAM/BAMData/BAM_data_package_November2019.RData")
 
 p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
@@ -30,7 +31,7 @@ specpred <- list.dirs(w, full.names=FALSE)
 
 models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
 rast <- raster(paste0(w,specpred[2],"/",models[1]))
-bcrc <- crop(bcr,rast)
+bcrc <- raster::crop(bcr,rast)
 
 subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
 subr <- rasterize(subunits,rast)
@@ -132,6 +133,33 @@ brtplot3 <- function (rast,spec,range) {
   dev.off()
 }
 
+#maps with range boundaries only (for manuscript)
+brtplot3a <- function (rast,spec,range) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.005)
+  zmin <- min(zmin,0.05)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  occur <- left_join(PC1,SScombo,by="SS")
+  occur <- occur[occur$ABUND > 0,]
+  occur <- na.omit(occur)
+  #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
+  occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+  occurcan <- occursp[canada,]
+  png(file=paste(x,spec,"_pred1km3a.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(range, col=NA, border="dark blue", add=TRUE)
+  plot(p, col="black", add=TRUE)
+  dev.off()
+}
+
 brtplot4 <- function (rast,spec,range) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.001)
@@ -206,7 +234,7 @@ brtplot6 <- function (rast,spec,range) {
 }
 
 setwd(w)
-for (i in 2:152){
+for (i in 2:length(specpred)){
     models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
     rast <- raster(paste0(w,specpred[i],"/",models[1]))
     rast <- mask(rast,subr)
@@ -230,8 +258,25 @@ for (i in 2:152){
 }
 gc()
 
+setwd(w)
+for (i in 2:length(specpred)){
+  models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
+  rast <- raster(paste0(w,specpred[i],"/",models[1]))
+  rast <- mask(rast,subr)
+  spec <- substr(models[1],6,9)
+  x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
+  # brtplot1(rast,spec)
+  # brtplot2(rast,spec)
+  # brtplot5(rast,spec)
+  if (class(x1)!="try-error"){
+    range <- range[range$ORIGIN %in% list(2,1),]
+    try(brtplot3a(rast,spec,range))
+  }
+}
+gc()
 
-for (i in 2:152){
+
+for (i in 2:length(specpred)){
   models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
   rast <- raster(paste0(w,specpred[i],"/",models[1]))
   rast <- mask(rast,subr)

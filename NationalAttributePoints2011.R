@@ -81,3 +81,5 @@ ss <- cbind(ss,"ROAD"=extract(rrc,st_coordinates(ss)))
 
 write.csv(ss,file=paste(w,"ss_2011attributes.csv",sep=""),row.names==FALSE)
 save(ss,file=paste(w,"ss_2011attributes.RData",sep=""))
+
+temp <- load(paste0(w,"ss_2011attributes.RData"))

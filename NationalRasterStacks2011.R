@@ -18,7 +18,7 @@ bcrs2 <- c("bcr60_100km.shp","bcr61_100km.shp","bcr70_100km.shp","bcr71_100km.sh
 canada <- shapefile("E:/GIS/basemaps/canadaLCC.shp")
 
 #Adaptwest baseline climate variables
-cur <- "E:/CMIP5/baseline19812010/"
+cur <- "E:/Climate/CMIP5/baseline19812010/"
 setwd(cur)
 clim <- list.files(cur, pattern =".asc$")
 curclim<-stack(clim)

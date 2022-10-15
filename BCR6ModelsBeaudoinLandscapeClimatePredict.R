@@ -134,6 +134,7 @@ dat_2011 <- cbind(dat2011,raster::extract(sampsum25,as.matrix(cbind(dat2011$X,da
 names(dat_2011)[ncol(dat_2011)] <- "sampsum25"
 dat_2011$wt <- 1/dat_2011$sampsum25
 dat_2011$SS <- as.character(dat_2011$SS) #n=34022
+#dat_2011$prov <- cbind(dat_2011,raster::extract(prov,as.matrix(cbind(dat_2011$X,dat_2001$Y))))
 
 samprast2001 <- rasterize(cbind(dat2001$X,dat2001$Y), r2, field=1, fun='sum')
 sampsum25 <- focal(samprast2001, w=matrix(1,nrow=5,ncol=5), na.rm=TRUE)
@@ -141,6 +142,7 @@ dat_2001 <- cbind(dat2001,raster::extract(sampsum25,as.matrix(cbind(dat2001$X,da
 names(dat_2001)[ncol(dat_2001)] <- "sampsum25"
 dat_2001$wt <- 1/dat_2001$sampsum25
 dat_2001$SS <- as.character(dat_2001$SS) #n=18837
+#dat_2001$prov <- cbind(dat_2001,raster::extract(prov,as.matrix(cbind(dat_2001$X,dat_2001$Y))))
 
 #generate current predictions and plots from models
 brtplot <- function (j) {
