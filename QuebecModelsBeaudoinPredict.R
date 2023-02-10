@@ -71,7 +71,7 @@ QCPC <- rbind(QCPC2001,QCPC2011) #n=632954
 survey2001 <- aggregate(QCPC2001$ABUND, by=list("PKEY"=QCPC2001$PKEY,"SS"=QCPC2001$SS), FUN=sum) #n=20712 (25646 with urban/ag) 
 survey2011 <- aggregate(QCPC2011$ABUND, by=list("PKEY"=QCPC2011$PKEY,"SS"=QCPC2011$SS), FUN=sum) #n=43395 (51916 with urban/ag)
 
-w <- "I:/My Drive/BAM.SharedDrive/RshProjs/CC/CCImpacts/QuebecLANDIS/"
+w <- "H:/My Drive/BAM.SharedDrive/RshProjs/CC/CCImpacts/QuebecLANDIS/"
 
 w2 <- "G:/Boreal/NationalModelsV2/Quebec/"
 setwd(w2)

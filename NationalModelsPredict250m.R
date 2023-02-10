@@ -6,11 +6,13 @@ PROJ <- "boot"
 #ROOT1 and ROOT2 (inputs) should be local drives. ROOT3 (outputs) can be mapped as a virtual drive
 ROOT1 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #input models
 ROOT2 <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/" #input BCR templates
-ROOT3 <- "H:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/May2020/" #output predictions
+#ROOT3 <- "H:/My Drive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModelsV4.0/May2020/" #output predictions
+ROOT3 <- "H:/My Drive/nationalmodel250/"
+
 SPP <- list.files(file.path(ROOT2, "out", PROJ))
 SPP2 <- c("ALFL","BAWW","BBWA","BCCH","BHVI","BLJA","BLPW","BOCH","BRCR","BTNW","CAWA","CMWA","CONW","COYE","CSWA","DEJU","GCKI", "GRAJ","LEFL","MOWA","OVEN","OSFL","PAWA","PHVI","RBNU","RCKI","REVI","RUBL","SWTH","TEWA","WETA","WIWR","YRWA")
 SPP3 <- c("WOTH")
-SPP4 <- c("GCTH", "FOSP", "WCSP")
+SPP4 <- c("NESP", "LEYE", "GCTH", "FOSP", "WCSP")
 
 B <- 32
 u <- c(60, 61, 70, 71, 80, 81, 82, 83, 9, 10, 11, 12, 13, 14, 4, 5, 

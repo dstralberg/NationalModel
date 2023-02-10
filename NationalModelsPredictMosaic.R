@@ -9,6 +9,7 @@ library(sf)
 library(Matrix)
 library(reshape2)
 library(colorspace)
+library(terra)
 
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
@@ -35,35 +36,66 @@ bcrc <- raster::crop(bcr,rast)
 
 subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
 subr <- rasterize(subunits,rast)
+
 #writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
-#summarize mean densities
-# prev <- data.frame("species"=specpred[2:length(specpred)],"meandens"=0)
-# for (i in 2:length(specpred)){
-#   models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-#   rast <- raster(paste0(w,specpred[i],"/",models[1]))
-#   spec <- substr(models[1],6,9)
-#   meandens <- cellStats(rast, 'mean')
-#   prev$meandens[i-1] = meandens
-# }
-# write.csv(prev,file=paste0(w,"meandensities.csv"),row.names=FALSE)
+#plot number of sampling points at 10-km resolution
+load("D:/BAM/BAMData/BAMdb-patched-xy.RData")	
+subr20k <- aggregate(subr, fact=20)
+subr10k <- aggregate(subr, fact=10)
+subr5k <- aggregate(subr, fact=5)
+samprast <- rasterize(cbind(SScombo$X,SScombo$Y), subr10k, fun='count')
+samprast2 <- rasterize(cbind(SScombo$X,SScombo$Y), subr20k, fun='count')
+can <- rasterize(canada,samprast2)
+sampcan <- mask(samprast2,can)
 
-#generate maps
-# brtplot <- function (rast,spec) {
-#   prev <- cellStats(rast, 'mean')	
-#   q99 <- quantile(rast, probs=c(0.99))
-#   max <- max(3*prev,q99)
-#   png(file=paste0(w,spec,"/",spec,"_pred1km1.png"), width=2600, height=1600, res=216)
-#   par(cex.main=1.8, mfcol=c(1,1), oma=c(0,0,0,0), xpd=TRUE)
-#   par(mar=c(0,0,0,0))
-#   plot(rast, col="blue", axes=FALSE, legend=FALSE)
-#   plot(rast, col=bluegreen.colors(15), maxpixels=5000000, zlim=c(0,max), axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
-#   plot(p, col="gray", add=TRUE)
-#   plot(l, col="gray", border=NA,add=TRUE)
-#   plot(bcr, col=NA, border="dark gray", add=TRUE)
-#   #text(2200000,9400000,"Potential density (males/ha)", cex=1.3)
-#   dev.off()
-# }
+
+brtplotdens <- function (rast) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.001)
+  zmin <- min(zmin,0.01)
+  zmax <- cellStats(rast,'max')
+  q99 <- quantile(rast, probs=c(0.99))
+  m <- c(q99,zmax,0)
+  rclmat <- matrix(m, ncol=3, byrow=TRUE)
+  rast2 <- reclassify(rast,rclmat)
+  png(file=paste0(x,"_pointdens20k.png"), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast2, col=bgy, range=c(0,q99), maxcell=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(bcr, col=NA, border="dark gray", add=TRUE)
+  plot(canada,col=NA,border="dark gray",add=TRUE)
+  dev.off()
+}
+brtplotdens(sampcan)
+
+#plot log abundance
+
+logabund <- raster("H:/Shared drives/BAM_NationalModels/NationalModels4.0/website/map-images/allspec_log_abund.tiff")
+brtplotabund <- function (rast) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.001)
+  zmin <- min(zmin,0.01)
+  zmax <- cellStats(rast,'max')
+  q99 <- quantile(rast, probs=c(0.99))
+  rast2 <- clamp(rast,0,q99)
+  png(file=paste0(x,"_logabund.png"), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast2, col=bgy, range=c(0,q99), maxcell=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  #plot(rast, col="#255668", range=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(bcr, col=NA, border="dark gray", add=TRUE)
+  plot(canada,col=NA,border="dark gray",add=TRUE)
+  dev.off()
+}
+brtplotabund(logabund)
+
 
 brtplot1 <- function (rast,spec) {
   prev <- cellStats(rast, 'mean')	
@@ -281,4 +313,62 @@ for (i in 2:length(specpred)){
   rast <- raster(paste0(w,specpred[i],"/",models[1]))
   rast <- mask(rast,subr)
   writeRaster(rast,file = paste0("G:/Boreal/NationalModelsV2/Zonation/spatial-layers/",specpred[i],"MeanCrop.tif"),overwrite=TRUE)
-  }
+}
+
+
+#CAWA map for manuscript
+bcr60 <- subunits[subunits$BCRChar=="6-0",]
+bcr12 <- subunits[subunits$BCRChar=="12",]
+models <- list.files(paste0(w,specpred[35],"/"),pattern="Mean.tif$")
+rast <- raster(paste0(w,specpred[35],"/",models[1]))
+rast <- mask(rast,subr)
+spec <- substr(models[1],6,9)
+x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
+range <- range[range$ORIGIN %in% list(2,1),]
+prev <- cellStats(rast, 'mean')	
+zmin <- max(prev,0.005)
+zmin <- min(zmin,0.05)
+zmax <- cellStats(rast, 'max')
+q99 <- quantile(rast, probs=c(0.999))
+png(file=paste(x,spec,"_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
+par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+plot(bcrc, col=NA, border=NA, axes=FALSE)
+plot(bcr, col="white", border=NA, add=TRUE)
+plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+plot(l, col="light gray", border=NA,add=TRUE)
+plot(range, col=NA, border="dark blue", add=TRUE)
+plot(p, col="black", add=TRUE)
+plot(bcr60, col=NA, border="darkred", add=TRUE)
+plot(bcr12, col=NA, border="red", add=TRUE)
+dev.off()
+
+#CONW map for manuscript
+bcr60 <- subunits[subunits$BCRChar=="6-0",]
+bcr81 <- subunits[subunits$BCRChar=="8-1",]
+models <- list.files(paste0(w,specpred[42],"/"),pattern="Mean.tif$")
+rast <- raster(paste0(w,specpred[42],"/",models[1]))
+rast <- mask(rast,subr)
+spec <- substr(models[1],6,9)
+x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
+range <- range[range$ORIGIN %in% list(2,1),]
+prev <- cellStats(rast, 'mean')	
+zmin <- max(prev,0.005)
+zmin <- min(zmin,0.05)
+zmax <- cellStats(rast, 'max')
+q99 <- quantile(rast, probs=c(0.999))
+png(file=paste(x,spec,"_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
+par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+plot(bcrc, col=NA, border=NA, axes=FALSE)
+plot(bcr, col="white", border=NA, add=TRUE)
+plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+plot(l, col="light gray", border=NA,add=TRUE)
+plot(range, col=NA, border="dark blue", add=TRUE)
+plot(p, col="black", add=TRUE)
+plot(bcr60, col=NA, border="red", add=TRUE)
+plot(bcr81, col=NA, border="darkred", add=TRUE)
+dev.off()
+
