@@ -82,4 +82,4 @@ save(ss,file=paste(w,"ss_2001attributes.RData",sep=""))
 
 temp <- load(paste0(w,"ss_2001attributes.RData"))
 ss2001 <- st_drop_geometry(ss[,c(1,5:225)])
-write.csv(ss2011,file=paste0(w,"ss_2001attributes_noXY.csv"),row.names=FALSE)
+write.csv(ss2001,file=paste0(w,"ss_2001attributes_noXY.csv"),row.names=FALSE)
