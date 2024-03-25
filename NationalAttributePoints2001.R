@@ -9,11 +9,11 @@ LCC <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=N
 lazea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 w <-"G:/Boreal/NationalModelsV2/"
 
-load("F:/BAM/BAMData/BAMdb-patched-xy.RData")	
+load("D:/BAM/BAMData/BAMdb-patched-xy.RData")	
 sslaz <- st_transform(ss,lazea)
 
 #MODIS-based landcover (250-m)
-nalc2005 <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+nalc2005 <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
 ss <- cbind(ss,"nalc"=extract(nalc2005,st_coordinates(ss)))
 urbag <- raster("G:/Boreal/NationalModelsV2/urbag2011_lcc1.tif")
 fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
@@ -24,8 +24,8 @@ led750 <- focal(wat,w=fw750,na.rm=TRUE)
 ss <- cbind(ss,"led750"=extract(led750,st_coordinates(ss)))
 
 #kNN biomass layers, 2001 (250-m)
-b2001 <- list.files("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
-setwd("F:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
+b2001 <- list.files("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/",pattern="tif$")
+setwd("E:/GIS/landcover/Beaudoin/Processed_sppBiomass/2001/")
 bs2001 <- stack(raster(b2001[1]))
 for (i in 2:length(b2001)) {bs2001 <- addLayer(bs2001, raster(b2001[i]))}
 names(bs2001) <- gsub("NFI_MODIS250m_2001_kNN_","",names(bs2001))
@@ -80,3 +80,6 @@ ss <- cbind(ss,"ROAD"=extract(rrc,st_coordinates(ss)))
 write.csv(ss,file=paste(w,"ss_2001attributes.csv",sep=""))
 save(ss,file=paste(w,"ss_2001attributes.RData",sep=""))
 
+temp <- load(paste0(w,"ss_2001attributes.RData"))
+ss2001 <- st_drop_geometry(ss[,c(1,5:225)])
+write.csv(ss2011,file=paste0(w,"ss_2001attributes_noXY.csv"),row.names=FALSE)

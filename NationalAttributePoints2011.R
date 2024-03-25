@@ -10,11 +10,11 @@ LCC <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=N
 lazea <- "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 w <-"G:/Boreal/NationalModelsV2/"
 
-load("F:/BAM/BAMData/BAMdb-patched-xy.RData")	
+load("D:/BAM/BAMData/BAMdb-patched-xy.RData")	
 sslaz <- st_transform(ss,lazea)
 
 #MODIS-based landcover (250-m)
-nalc2005 <- raster("F:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
+nalc2005 <- raster("E:/GIS/landcover/NALC/LandCover_IMG/NA_LandCover_2005/data/NA_LandCover_2005/NA_LandCover_2005_LCC.img")
 ss <- cbind(ss,"nalc"=extract(nalc2005,st_coordinates(ss)))
 urbag <- raster("G:/Boreal/NationalModelsV2/urbag2011_lcc1.tif")
 fw750<-focalWeight(x=urbag,d=750,type="Gauss") #Gaussian filter with sigma=750 (tapers off around 2km)
@@ -79,7 +79,9 @@ rcroad <- matrix(mr, ncol=3, byrow=TRUE)
 rrc <- reclassify(road,rcroad)
 ss <- cbind(ss,"ROAD"=extract(rrc,st_coordinates(ss)))
 
-write.csv(ss,file=paste(w,"ss_2011attributes.csv",sep=""),row.names==FALSE)
+write.csv(ss,file=paste(w,"ss_2011attributes.csv",sep=""),row.names=FALSE)
 save(ss,file=paste(w,"ss_2011attributes.RData",sep=""))
 
 temp <- load(paste0(w,"ss_2011attributes.RData"))
+ss2011 <- st_drop_geometry(ss[,c(1,5:225)])
+write.csv(ss2011,file=paste0(w,"ss_2011attributes_noXY.csv"),row.names=FALSE)

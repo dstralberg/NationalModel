@@ -19,6 +19,18 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
 load("D:/BAM/BAMData/BAM_data_package_November2019.RData")
+occur <- left_join(PCmatch,SScombo,by="SS")
+occur <- occur[occur$ABUND > 0,]
+occur <- na.omit(occur)
+occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+occurcan <- occursp[canada,]
+detect <- unique(occurcan[,c(1,2)])
+detect$count <- 1
+countd <- stats::aggregate(x=detect$count,by=list(detect$SPECIES), FUN="sum")
+write.csv(countd, file=paste0(w,"detections.csv"),row.names=FALSE)
+
+pkeymodel <- unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
+write.csv(pkeymodel, file=paste0(w,"pkeymodel.csv"),row.names=FALSE)
 
 p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
@@ -340,8 +352,8 @@ plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legen
 plot(l, col="light gray", border=NA,add=TRUE)
 plot(range, col=NA, border="dark blue", add=TRUE)
 plot(p, col="black", add=TRUE)
-plot(bcr60, col=NA, border="darkred", add=TRUE)
-plot(bcr12, col=NA, border="red", add=TRUE)
+plot(bcr60, col=NA, border="orange", lwd=1.2, add=TRUE)
+plot(bcr12, col=NA, border="orange", lwd=1.2, add=TRUE)
 dev.off()
 
 #CONW map for manuscript
@@ -368,7 +380,7 @@ plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legen
 plot(l, col="light gray", border=NA,add=TRUE)
 plot(range, col=NA, border="dark blue", add=TRUE)
 plot(p, col="black", add=TRUE)
-plot(bcr60, col=NA, border="red", add=TRUE)
-plot(bcr81, col=NA, border="darkred", add=TRUE)
+plot(bcr60, col=NA, border="orange", lwd=1.2, add=TRUE)
+plot(bcr81, col=NA, border="orange", lwd=1.2, add=TRUE)
 dev.off()
 
