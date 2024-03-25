@@ -11,12 +11,23 @@ library(reshape2)
 library(colorspace)
 library(terra)
 
+w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
+x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
+
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
 
 bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
+
+p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
+bcr <- rgdal::readOGR("E:/GIS/basemaps/BCRs/bcrfinallcc.shp")
+canada <- rgdal::readOGR("E:/GIS/basemaps/canadaLCC.shp")
+natureserve <- "E:/GIS/NatureServe/Abbreviated/_lcc/"
+LCC <- CRS(projection(canada))
+specpred <- list.dirs(w, full.names=FALSE)
 
 load("D:/BAM/BAMData/BAM_data_package_November2019.RData")
 occur <- left_join(PCmatch,SScombo,by="SS")
@@ -29,18 +40,10 @@ detect$count <- 1
 countd <- stats::aggregate(x=detect$count,by=list(detect$SPECIES), FUN="sum")
 write.csv(countd, file=paste0(w,"detections.csv"),row.names=FALSE)
 
+write.csv(occurcan[,2:6],file="G:/Boreal/NationalModelsV2/abund_noxy.csv",row.names=FALSE)
+
 pkeymodel <- unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
 write.csv(pkeymodel, file=paste0(w,"pkeymodel.csv"),row.names=FALSE)
-
-p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
-bcr <- rgdal::readOGR("E:/GIS/basemaps/BCRs/bcrfinallcc.shp")
-canada <- rgdal::readOGR("E:/GIS/basemaps/canadaLCC.shp")
-natureserve <- "E:/GIS/NatureServe/Abbreviated/_lcc/"
-LCC <- CRS(projection(canada))
-w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
-x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
-specpred <- list.dirs(w, full.names=FALSE)
 
 models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
 rast <- raster(paste0(w,specpred[2],"/",models[1]))
