@@ -29,6 +29,13 @@ natureserve <- "E:/GIS/NatureServe/Abbreviated/_lcc/"
 LCC <- CRS(projection(canada))
 specpred <- list.dirs(w, full.names=FALSE)
 
+models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
+rast <- raster(paste0(w,specpred[2],"/",models[1]))
+bcrc <- raster::crop(bcr,rast)
+
+subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
+subr <- rasterize(subunits,rast)
+
 
 #load("D:/BAM/BAMData/BAMdb-GNMsubset-2020-01-08.RData")
 
@@ -46,15 +53,8 @@ write.csv(countd, file=paste0(w,"detections.csv"),row.names=FALSE)
 write.csv(occurcan[,2:6],file="G:/Boreal/NationalModelsV2/abund_noxy.csv",row.names=FALSE)
 write.csv(occurcan[,1:6],file="G:/Boreal/NationalModelsV2/GNMabund_noxy.csv",row.names=FALSE)
 
-pkeymodel <- unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
+pkeymodel <- data.table::unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
 write.csv(pkeymodel, file="G:/Boreal/NationalModelsV2/pkeymodel.csv",row.names=FALSE)
-
-models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
-rast <- raster(paste0(w,specpred[2],"/",models[1]))
-bcrc <- raster::crop(bcr,rast)
-
-subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
-subr <- rasterize(subunits,rast)
 
 #writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
@@ -85,8 +85,8 @@ brtplotdens <- function (rast) {
   plot(rast2, col=bgy, range=c(0,q99), maxcell=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
   plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
-  plot(bcr, col=NA, border="dark gray", add=TRUE)
-  plot(canada,col=NA,border="dark gray",add=TRUE)
+  plot(bcr, col=NA, border="black", lwd=1.5, add=TRUE)
+  plot(canada,col=NA,border="black", lwd=1.5, add=TRUE)
   dev.off()
 }
 brtplotdens(sampcan)
@@ -96,21 +96,20 @@ brtplotdens(sampcan)
 logabund <- raster("H:/Shared drives/BAM_NationalModels/NationalModels4.0/website/map-images/allspec_log_abund.tiff")
 brtplotabund <- function (rast) {
   prev <- cellStats(rast, 'mean')	
-  zmin <- max(prev,0.001)
-  zmin <- min(zmin,0.01)
+  zmin <- cellStats(rast,'min')
   zmax <- cellStats(rast,'max')
   q99 <- quantile(rast, probs=c(0.99))
-  rast2 <- clamp(rast,0,q99)
+  rast2 <- clamp(rast,6,q99)
   png(file=paste0(x,"_logabund.png"), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
   plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
-  plot(rast2, col=bgy, range=c(0,q99), maxcell=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast2, col=bgy, range=c(6,q99), maxcell=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
   #plot(rast, col="#255668", range=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
   plot(l, col="light gray", border=NA,add=TRUE)
-  plot(bcr, col=NA, border="dark gray", add=TRUE)
-  plot(canada,col=NA,border="dark gray",add=TRUE)
+  plot(bcr, col=NA, border="black", lwd=1.5, add=TRUE)
+  plot(canada,col=NA,border="black", lwd=1.5, add=TRUE)
   dev.off()
 }
 brtplotabund(logabund)
@@ -357,10 +356,10 @@ plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=
 plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
 plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
 plot(l, col="light gray", border=NA,add=TRUE)
-plot(range, col=NA, border="dark blue", add=TRUE)
+plot(range, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
 plot(p, col="black", add=TRUE)
-plot(bcr60, col=NA, border="orange", lwd=1.2, add=TRUE)
-plot(bcr12, col=NA, border="orange", lwd=1.2, add=TRUE)
+plot(bcr60, col=NA, border="red", lwd=2, add=TRUE)
+plot(bcr12, col=NA, border="red", lwd=2, add=TRUE)
 dev.off()
 
 #CONW map for manuscript
@@ -385,9 +384,9 @@ plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=
 plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
 plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
 plot(l, col="light gray", border=NA,add=TRUE)
-plot(range, col=NA, border="dark blue", add=TRUE)
+plot(range, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
 plot(p, col="black", add=TRUE)
-plot(bcr60, col=NA, border="orange", lwd=1.2, add=TRUE)
-plot(bcr81, col=NA, border="orange", lwd=1.2, add=TRUE)
+plot(bcr60, col=NA, border="red", lwd=2, add=TRUE)
+plot(bcr12, col=NA, border="red", lwd=2, add=TRUE)
 dev.off()
 
