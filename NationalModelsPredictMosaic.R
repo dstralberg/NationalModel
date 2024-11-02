@@ -387,6 +387,6 @@ plot(l, col="light gray", border=NA,add=TRUE)
 plot(range, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
 plot(p, col="black", add=TRUE)
 plot(bcr60, col=NA, border="red", lwd=2, add=TRUE)
-plot(bcr12, col=NA, border="red", lwd=2, add=TRUE)
+plot(bcr81, col=NA, border="red", lwd=2, add=TRUE)
 dev.off()
 
