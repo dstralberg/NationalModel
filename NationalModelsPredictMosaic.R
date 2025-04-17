@@ -51,13 +51,13 @@ occurcan <- occursp[canada,]
 detect <- unique(occurcan[,c(1,2)])
 detect$count <- 1
 countd <- stats::aggregate(x=detect$count,by=list(detect$SPECIES), FUN="sum")
-write.csv(countd, file=paste0(w,"detections.csv"),row.names=FALSE)
+#write.csv(countd, file=paste0(w,"detections.csv"),row.names=FALSE)
 
-write.csv(occurcan[,2:6],file="G:/Boreal/NationalModelsV2/abund_noxy.csv",row.names=FALSE)
-write.csv(occurcan[,1:6],file="G:/Boreal/NationalModelsV2/GNMabund_noxy.csv",row.names=FALSE)
+#write.csv(occurcan[,2:6],file="G:/Boreal/NationalModelsV2/abund_noxy.csv",row.names=FALSE)
+#write.csv(occurcan[,1:6],file="G:/Boreal/NationalModelsV2/GNMabund_noxy.csv",row.names=FALSE)
 
-pkeymodel <- data.table::unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
-write.csv(pkeymodel, file="G:/Boreal/NationalModelsV2/pkeymodel.csv",row.names=FALSE)
+pkeYeahymodel <- data.table::unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
+#write.csv(pkeymodel, file="G:/Boreal/NationalModelsV2/pkeymodel.csv",row.names=FALSE)
 
 #writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
@@ -193,13 +193,6 @@ brtplot3a <- function (rast,spec,range) {
   zmin <- min(zmin,0.05)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
-  occur <- left_join(PC1,SScombo,by="SS")
-  occur <- occur[occur$ABUND > 0,]
-  occur <- na.omit(occur)
-  #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
-  occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
-  occurcan <- occursp[canada,]
   png(file=paste(x,spec,"_pred1km3a.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
@@ -240,6 +233,25 @@ brtplot4 <- function (rast,spec,range) {
   dev.off()
 }
 
+#maps with range boundaries only (for manuscript)
+brtplot4a <- function (rast,spec,range) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.001)
+  zmin <- min(zmin,0.01)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  png(file=paste(x,spec,"_pred1km4a.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(range, col=NA, border="dark blue", add=TRUE)
+  plot(p, col="black", add=TRUE)
+  dev.off()
+}
 
 brtplot5 <- function (rast,spec) {
   prev <- cellStats(rast, 'mean')	
@@ -286,6 +298,25 @@ brtplot6 <- function (rast,spec,range) {
   dev.off()
 }
 
+#maps with range boundaries only (for manuscript)
+brtplot6a <- function (rast,spec,range) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- min(prev,0.001)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  png(file=paste(x,spec,"_pred1km6a.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(range, col=NA, border="dark blue", add=TRUE)
+  plot(p, col="black", add=TRUE)
+  dev.off()
+}
+
 setwd(x)
 for (i in 1:length(specpred)){
   models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorrected.tif$"))
@@ -293,12 +324,12 @@ for (i in 1:length(specpred)){
   rast <- mask(rast,subr)
   spec <- substr(models[1],1,4)
   x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-  brtplot1(rast,spec)
+  #brtplot1(rast,spec)
   #brtplot2(rast,spec)
-  brtplot5(rast,spec)
+  #brtplot5(rast,spec)
   if (class(x1)!="try-error"){
     range <- range[range$ORIGIN %in% list(2,1),]
-    #try(brtplot3(rast,spec,range))
+    try(brtplot3(rast,spec,range))
     #try(brtplot3a(rast,spec,range))
     try(brtplot4(rast,spec,range))
     try(brtplot6(rast,spec,range))
