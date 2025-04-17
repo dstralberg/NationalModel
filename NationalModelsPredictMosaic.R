@@ -329,10 +329,12 @@ for (i in 1:length(specpred)){
   #brtplot5(rast,spec)
   if (class(x1)!="try-error"){
     range <- range[range$ORIGIN %in% list(2,1),]
-    try(brtplot3(rast,spec,range))
+    #try(brtplot3(rast,spec,range))
     #try(brtplot3a(rast,spec,range))
-    try(brtplot4(rast,spec,range))
-    try(brtplot6(rast,spec,range))
+    #try(brtplot4(rast,spec,range))
+    #try(brtplot6(rast,spec,range))
+    try(brtplot4a(rast,spec,range))
+    try(brtplot6a(rast,spec,range))
   }
 }
 gc()
