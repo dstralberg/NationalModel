@@ -296,4 +296,14 @@ varimpwide <- dcast(varimpsummary, SPEC ~ var)
 statscombo <- merge(cvstats,varimpwide,by="SPEC")
 write.csv(statscombo,file=paste(w,"v8NoUrban/","_statscombo8.csv",sep=""))
 
+QCPC$index <- 1
+QCPCdetections <- aggregate(QCPC$index,by=list("SPEC" = QCPC$SPECIES),FUN=sum)
+QCPCdetect <- filter(QCPCdetections, SPEC %in% speclist)
+write.csv(QCPCdetect, file="G:/Boreal/NationalModelsV2/Quebec/QCspecies_detections.csv")
+
+
+survey <- rbind(survey2001,survey2011)
+survey$index <- 1
+SScount <- aggregate(survey$index,by=list("SS" = survey$SS),FUN=sum) #n = 33674
+
 

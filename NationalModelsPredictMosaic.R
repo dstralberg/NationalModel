@@ -12,7 +12,8 @@ library(colorspace)
 library(terra)
 
 w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
-x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
+#x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
+x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/"
 
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
@@ -27,7 +28,9 @@ bcr <- rgdal::readOGR("E:/GIS/basemaps/BCRs/bcrfinallcc.shp")
 canada <- rgdal::readOGR("E:/GIS/basemaps/canadaLCC.shp")
 natureserve <- "E:/GIS/NatureServe/Abbreviated/_lcc/"
 LCC <- CRS(projection(canada))
-specpred <- list.dirs(w, full.names=FALSE)
+#specpred <- list.dirs(w, full.names=FALSE)
+specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
+specpred <- substr(specpred,1,4)
 
 models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
 rast <- raster(paste0(w,specpred[2],"/",models[1]))
@@ -283,64 +286,41 @@ brtplot6 <- function (rast,spec,range) {
   dev.off()
 }
 
-setwd(w)
-for (i in 2:length(specpred)){
-    models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-    rast <- raster(paste0(w,specpred[i],"/",models[1]))
-    rast <- mask(rast,subr)
-    spec <- substr(models[1],6,9)
-    x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-    brtplot1(rast,spec)
-    brtplot2(rast,spec)
-    brtplot5(rast,spec)
-    if (class(x1)!="try-error"){
-      range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot3(rast,spec,range))
-    }
-    if (class(x1)!="try-error"){
-      range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot4(rast,spec,range))
-    }
-    if (class(x1)!="try-error"){
-      range <- range[range$ORIGIN %in% list(2,1),]
-      try(brtplot6(rast,spec,range))
-    }
-}
-gc()
-
-setwd(w)
-for (i in 2:length(specpred)){
-  models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-  rast <- raster(paste0(w,specpred[i],"/",models[1]))
+setwd(x)
+for (i in 1:length(specpred)){
+  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorrected.tif$"))
+  rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
-  spec <- substr(models[1],6,9)
+  spec <- substr(models[1],1,4)
   x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-  # brtplot1(rast,spec)
-  # brtplot2(rast,spec)
-  # brtplot5(rast,spec)
+  brtplot1(rast,spec)
+  #brtplot2(rast,spec)
+  brtplot5(rast,spec)
   if (class(x1)!="try-error"){
     range <- range[range$ORIGIN %in% list(2,1),]
-    try(brtplot3a(rast,spec,range))
+    #try(brtplot3(rast,spec,range))
+    #try(brtplot3a(rast,spec,range))
+    try(brtplot4(rast,spec,range))
+    try(brtplot6(rast,spec,range))
   }
 }
 gc()
 
 
-for (i in 2:length(specpred)){
-  models <- list.files(paste0(w,specpred[i],"/"),pattern="Mean.tif$")
-  rast <- raster(paste0(w,specpred[i],"/",models[1]))
+for (i in 1:length(specpred)){
+  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorrected.tif$"))
+  rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
-  writeRaster(rast,file = paste0("G:/Boreal/NationalModelsV2/Zonation/spatial-layers/",specpred[i],"MeanCrop.tif"),overwrite=TRUE)
+  writeRaster(rast,file = paste0(x,specpred[i],"_MeanCrop.tif"),overwrite=TRUE)
 }
 
 
 #CAWA map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr12 <- subunits[subunits$BCRChar=="12",]
-models <- list.files(paste0(w,specpred[35],"/"),pattern="Mean.tif$")
-rast <- raster(paste0(w,specpred[35],"/",models[1]))
+rast <- raster(paste0(z,"CAWA_TSSRcorrected.tif"))
 rast <- mask(rast,subr)
-spec <- substr(models[1],6,9)
+spec <- substr(models[1],1,4)
 x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
 prev <- cellStats(rast, 'mean')	
@@ -365,11 +345,10 @@ dev.off()
 #CONW map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr81 <- subunits[subunits$BCRChar=="8-1",]
-models <- list.files(paste0(w,specpred[42],"/"),pattern="Mean.tif$")
-rast <- raster(paste0(w,specpred[42],"/",models[1]))
+rast <- raster(paste0(z,"CONW_TSSRcorrected.tif"))
 rast <- mask(rast,subr)
-spec <- substr(models[1],6,9)
-x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
+spec <- substr(models[1],1,4)
+x1<-try(range <- shapefile(paste(natureserve,spec,"CONW.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
 prev <- cellStats(rast, 'mean')	
 zmin <- max(prev,0.005)
