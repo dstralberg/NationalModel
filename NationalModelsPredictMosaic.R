@@ -22,19 +22,22 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
+adjust <- read.csv(paste0(x,"offset-adjustments-2025-04-04.csv"))
+specpred <- unique(adjust$spp)
+
 p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("H:/Shared drives/GIS/hydrology/lakes_lcc.shp")
 bcr <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/BCRs/bcrfinallcc.shp")
 canada <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/canadaLCC.shp")
-natureserve <- "H:/Shared drives/GIS/NatureServe/Abbreviated/_lcc/"
+natureserve <- "H:/Shared drives/GIS/NatureServe/CODES/"
 LCC <- CRS(projection(canada))
 #specpred <- list.dirs(w, full.names=FALSE)
-specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
-specpred <- substr(specpred,1,4)
+#specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
+#specpred <- substr(specpred,1,4)
 
 models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
-#rast <- raster(paste0(w,specpred[2],"/",models[1]))
-#bcrc <- raster::crop(bcr,rast)
+rast <- raster(paste0(w,specpred[2],"/",models[1]))
+bcrc <- raster::crop(bcr,rast)
 
 subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
 #subr <- rasterize(subunits,rast)
@@ -354,17 +357,16 @@ for (i in 1:length(specpred)){
 #CAWA map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr12 <- subunits[subunits$BCRChar=="12",]
-rast <- raster(paste0(z,"CAWA_TSSRcorrected.tif"))
+rast <- raster(paste0(x,"CAWA_TSSRcorrected.tif"))
 rast <- mask(rast,subr)
-spec <- substr(models[1],1,4)
-x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
+x1<-try(range <- shapefile(paste0(natureserve,"CAWA.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
 prev <- cellStats(rast, 'mean')	
 zmin <- max(prev,0.005)
 zmin <- min(zmin,0.05)
 zmax <- cellStats(rast, 'max')
 q99 <- quantile(rast, probs=c(0.999))
-png(file=paste(x,spec,"_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
+png(file=paste(x,"CAWA_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
 par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
 plot(bcrc, col=NA, border=NA, axes=FALSE)
 plot(bcr, col="white", border=NA, add=TRUE)
@@ -381,17 +383,17 @@ dev.off()
 #CONW map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr81 <- subunits[subunits$BCRChar=="8-1",]
-rast <- raster(paste0(z,"CONW_TSSRcorrected.tif"))
+rast <- raster(paste0(x,"CONW_TSSRcorrected.tif"))
 rast <- mask(rast,subr)
 spec <- substr(models[1],1,4)
-x1<-try(range <- shapefile(paste(natureserve,spec,"CONW.shp",sep="")))
+x1<-try(range <- shapefile(paste0(natureserve,spec,"CONW.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
 prev <- cellStats(rast, 'mean')	
 zmin <- max(prev,0.005)
 zmin <- min(zmin,0.05)
 zmax <- cellStats(rast, 'max')
 q99 <- quantile(rast, probs=c(0.999))
-png(file=paste(x,spec,"_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
+png(file=paste(x,"CONW_pred1km_ms.png",sep=""), width=2600, height=1600, res=216)
 par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
 plot(bcrc, col=NA, border=NA, axes=FALSE)
 plot(bcr, col="white", border=NA, add=TRUE)
