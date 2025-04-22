@@ -303,7 +303,7 @@ write.csv(QCPCdetect, file="G:/Boreal/NationalModelsV2/Quebec/QCspecies_detectio
 
 
 survey <- rbind(survey2001,survey2011)
-survey$index <- 1
+survey$index <- 1 #n = 64107
 SScount <- aggregate(survey$index,by=list("SS" = survey$SS),FUN=sum) #n = 33674
 
 

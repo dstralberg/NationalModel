@@ -35,8 +35,13 @@ LCC <- CRS(projection(canada))
 #specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
 #specpred <- substr(specpred,1,4)
 
-models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
-rast <- raster(paste0(w,specpred[2],"/",models[1]))
+#models <- list.files(paste0(x,specpred[2],"/"),pattern="Mean.tif$")
+#rast <- raster(paste0(w,specpred[2],"/",models[1]))
+
+models <- list.files(x,pattern=paste0(specpred[1],"_TSSRcorrected.tif$"))
+rast <- raster(paste0(x,models[1]))
+rast <- mask(rast,subr)
+spec <- substr(models[1],1,4)
 bcrc <- raster::crop(bcr,rast)
 
 subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
@@ -329,15 +334,15 @@ for (i in 1:length(specpred)){
   rast <- mask(rast,subr)
   spec <- substr(models[1],1,4)
   x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-  #brtplot1(rast,spec)
-  #brtplot2(rast,spec)
-  #brtplot5(rast,spec)
+  brtplot1(rast,spec)
+  brtplot2(rast,spec)
+  brtplot5(rast,spec)
   if (class(x1)!="try-error"){
     range <- range[range$ORIGIN %in% list(2,1),]
-    #try(brtplot3(rast,spec,range))
-    #try(brtplot3a(rast,spec,range))
-    #try(brtplot4(rast,spec,range))
-    #try(brtplot6(rast,spec,range))
+    try(brtplot3(rast,spec,range))
+    try(brtplot3a(rast,spec,range))
+    try(brtplot4(rast,spec,range))
+    try(brtplot6(rast,spec,range))
     try(brtplot4a(rast,spec,range))
     try(brtplot6a(rast,spec,range))
   }
