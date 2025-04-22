@@ -11,7 +11,7 @@ library(reshape2)
 library(colorspace)
 library(terra)
 
-w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
+#w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
 #x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
 x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/"
 
@@ -22,27 +22,29 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
-p<- rgdal::readOGR("E:/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("E:/GIS/hydrology/lakes_lcc.shp")
-bcr <- rgdal::readOGR("E:/GIS/basemaps/BCRs/bcrfinallcc.shp")
-canada <- rgdal::readOGR("E:/GIS/basemaps/canadaLCC.shp")
-natureserve <- "E:/GIS/NatureServe/Abbreviated/_lcc/"
+p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
+l <- rgdal::readOGR("H:/Shared drives/GIS/hydrology/lakes_lcc.shp")
+bcr <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/BCRs/bcrfinallcc.shp")
+canada <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/canadaLCC.shp")
+natureserve <- "H:/Shared drives/GIS/NatureServe/Abbreviated/_lcc/"
 LCC <- CRS(projection(canada))
 #specpred <- list.dirs(w, full.names=FALSE)
 specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
 specpred <- substr(specpred,1,4)
 
 models <- list.files(paste0(w,specpred[2],"/"),pattern="Mean.tif$")
-rast <- raster(paste0(w,specpred[2],"/",models[1]))
-bcrc <- raster::crop(bcr,rast)
+#rast <- raster(paste0(w,specpred[2],"/",models[1]))
+#bcrc <- raster::crop(bcr,rast)
 
-subunits <- shapefile("G:/Boreal/NationalModelsV2/BCRSubunits.shp")
-subr <- rasterize(subunits,rast)
+subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
+#subr <- rasterize(subunits,rast)
+
+subr<- raster("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/BCRUnits/BCRSubunits.tif")
 
 
 #load("D:/BAM/BAMData/BAMdb-GNMsubset-2020-01-08.RData")
 
-load("D:/BAM/BAMData/BAM_data_package_November2019.RData")
+load("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/data/BAMData/BAM_data_package_November2019.RData")
 occur <- left_join(PCmatch,SScombo,by="SS")
 occur <- occur[occur$ABUND > 0,]
 occur <- na.omit(occur)
@@ -62,7 +64,7 @@ pkeYeahymodel <- data.table::unique(as.data.frame(occurcan[,c(1,4,5,7,8)]))
 #writeRaster(subr,file = "G:/Boreal/NationalModelsV2/BCRSubunits.tif",overwrite=TRUE)
 
 #plot number of sampling points at 10-km resolution
-load("D:/BAM/BAMData/BAMdb-patched-xy.RData")	
+load("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/data/BAMData/BAMdb-patched-xy.RData")	
 subr20k <- aggregate(subr, fact=20)
 subr10k <- aggregate(subr, fact=10)
 subr5k <- aggregate(subr, fact=5)
@@ -96,7 +98,7 @@ brtplotdens(sampcan)
 
 #plot log abundance
 
-logabund <- raster("H:/Shared drives/BAM_NationalModels/NationalModels4.0/website/map-images/allspec_log_abund.tiff")
+#logabund <- raster("H:/Shared drives/BAM_NationalModels/NationalModels4.0/website/map-images/allspec_log_abund.tiff")
 brtplotabund <- function (rast) {
   prev <- cellStats(rast, 'mean')	
   zmin <- cellStats(rast,'min')
@@ -336,6 +338,7 @@ for (i in 1:length(specpred)){
     try(brtplot4a(rast,spec,range))
     try(brtplot6a(rast,spec,range))
   }
+  gc()
 }
 gc()
 
