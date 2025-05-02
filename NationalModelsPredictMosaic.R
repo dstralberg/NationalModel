@@ -13,7 +13,7 @@ library(terra)
 
 #w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
 #x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
-x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/"
+x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp_0ed/"
 
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
@@ -22,7 +22,7 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
-adjust <- read.csv(paste0(x,"offset-adjustments-2025-04-04.csv"))
+adjust <- read.csv("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/offset-adjustments-2025-04-04.csv")
 specpred <- unique(adjust$spp)
 
 p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
@@ -329,7 +329,7 @@ brtplot6a <- function (rast,spec,range) {
 
 setwd(x)
 for (i in 1:length(specpred)){
-  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorrected.tif$"))
+  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorr_0ed.tif$"))
   rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
   spec <- substr(models[1],1,4)
