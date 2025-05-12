@@ -38,17 +38,16 @@ LCC <- CRS(projection(canada))
 #models <- list.files(paste0(x,specpred[2],"/"),pattern="Mean.tif$")
 #rast <- raster(paste0(w,specpred[2],"/",models[1]))
 
-models <- list.files(x,pattern=paste0(specpred[1],"_TSSRcorr_0ed.tif$"))
-rast <- raster(paste0(x,models[1]))
-rast <- mask(rast,subr)
-spec <- substr(models[1],1,4)
-bcrc <- raster::crop(bcr,rast)
-
 subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
 #subr <- rasterize(subunits,rast)
 
 subr<- raster("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/BCRUnits/BCRSubunits.tif")
 
+models <- list.files(x,pattern=paste0(specpred[1],"_TSSRcorr_1ed.tif$"))
+rast <- raster(paste0(x,models[1]))
+rast <- mask(rast,subr)
+spec <- substr(models[1],1,4)
+bcrc <- raster::crop(bcr,rast)
 
 #load("D:/BAM/BAMData/BAMdb-GNMsubset-2020-01-08.RData")
 
@@ -57,6 +56,7 @@ occur <- left_join(PCmatch,SScombo,by="SS")
 occur <- occur[occur$ABUND > 0,]
 occur <- na.omit(occur)
 occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+projection(occursp) <- LCC
 occurcan <- occursp[canada,]
 detect <- unique(occurcan[,c(1,2)])
 detect$count <- 1
@@ -135,7 +135,7 @@ brtplot1 <- function (rast,spec) {
   q99 <- quantile(rast, probs=c(0.999))
   #max <- max(3*prev,q99)
   zmax <- cellStats(rast, 'max')
-  png(file=paste0(x,spec,"_pred1km1.png"), width=2600, height=1600, res=216)
+  png(file=paste0(x,spec,"_pred1km1_1.png"), width=2600, height=1600, res=216)
   par(cex.main=1.8, mfcol=c(1,1), mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -155,7 +155,7 @@ brtplot2 <- function (rast,spec) {
   q99 <- quantile(rast, probs=c(0.999))
   #max <- max(3*prev,q99)
   zmax <- cellStats(rast, 'max')
-  png(file=paste0(x,spec,"_pred1km2.png"), width=2600, height=1600, res=216)
+  png(file=paste0(x,spec,"_pred1km2_1.png"), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -182,7 +182,7 @@ brtplot3 <- function (rast,spec,range) {
   #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
   occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
   occurcan <- occursp[canada,]
-  png(file=paste(x,spec,"_pred1km3.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km3_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -203,7 +203,7 @@ brtplot3a <- function (rast,spec,range) {
   zmin <- min(zmin,0.05)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  png(file=paste(x,spec,"_pred1km3a.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km3a_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -229,7 +229,7 @@ brtplot4 <- function (rast,spec,range) {
   #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
   occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
   occurcan <- occursp[canada,]
-  png(file=paste(x,spec,"_pred1km4.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km4_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -250,7 +250,7 @@ brtplot4a <- function (rast,spec,range) {
   zmin <- min(zmin,0.01)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  png(file=paste(x,spec,"_pred1km4a.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km4a_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -269,7 +269,7 @@ brtplot5 <- function (rast,spec) {
   q99 <- quantile(rast, probs=c(0.999))
   #max <- max(3*prev,q99)
   zmax <- cellStats(rast, 'max')
-  png(file=paste0(x,spec,"_pred1km5.png"), width=2600, height=1600, res=216)
+  png(file=paste0(x,spec,"_pred1km5_1.png"), width=2600, height=1600, res=216)
   par(cex.main=1.8, mfcol=c(1,1), mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -294,7 +294,7 @@ brtplot6 <- function (rast,spec,range) {
   #write.csv(as.data.frame(occur), file=paste(w,spec,"_occur.csv",sep=""), row.names=FALSE)
   occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
   occurcan <- occursp[canada,]
-  png(file=paste(x,spec,"_pred1km6.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km6_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -314,7 +314,7 @@ brtplot6a <- function (rast,spec,range) {
   zmin <- min(prev,0.001)
   zmax <- cellStats(rast, 'max')
   q99 <- quantile(rast, probs=c(0.999))
-  png(file=paste(x,spec,"_pred1km6a.png",sep=""), width=2600, height=1600, res=216)
+  png(file=paste(x,spec,"_pred1km6a_1.png",sep=""), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -329,7 +329,7 @@ brtplot6a <- function (rast,spec,range) {
 
 setwd(x)
 for (i in 1:length(specpred)){
-  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorr_0ed.tif$"))
+  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorr_1ed.tif$"))
   rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
   spec <- substr(models[1],1,4)
