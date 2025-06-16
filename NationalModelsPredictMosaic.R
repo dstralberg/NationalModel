@@ -13,7 +13,7 @@ library(terra)
 
 #w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
 #x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
-x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp_0ed/"
+x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/NewMosaicApproach/"
 
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
@@ -23,7 +23,10 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
 adjust <- read.csv("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/offset-adjustments-2025-04-04.csv")
-specpred <- unique(adjust$spp)
+#specpred <- unique(adjust$spp)
+speclist <- read.csv("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/speclist.csv")
+speclist <- speclist[speclist$drop == 0,]
+specpred <- as.vector(speclist[,1])
 
 p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("H:/Shared drives/GIS/hydrology/lakes_lcc.shp")
@@ -38,10 +41,9 @@ LCC <- CRS(projection(canada))
 #models <- list.files(paste0(x,specpred[2],"/"),pattern="Mean.tif$")
 #rast <- raster(paste0(w,specpred[2],"/",models[1]))
 
-models <- list.files(x,pattern=paste0(specpred[1],"_TSSRcorr_0ed.tif$"))
+models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[1]))
 rast <- raster(paste0(x,models[1]))
 rast <- mask(rast,subr)
-spec <- substr(models[1],1,4)
 bcrc <- raster::crop(bcr,rast)
 
 subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
@@ -329,22 +331,21 @@ brtplot6a <- function (rast,spec,range) {
 
 setwd(x)
 for (i in 1:length(specpred)){
-  models <- list.files(x,pattern=paste0(specpred[i],"_TSSRcorr_0ed.tif$"))
+  models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[i]))
   rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
-  spec <- substr(models[1],1,4)
-  x1<-try(range <- shapefile(paste(natureserve,spec,".shp",sep="")))
-  #brtplot1(rast,spec)
-  #brtplot2(rast,spec)
-  #brtplot5(rast,spec)
+  x1<-try(range <- shapefile(paste(natureserve,specpred[i],".shp",sep="")))
+  brtplot1(rast,specpred[i])
+  brtplot2(rast,specpred[i])
+  brtplot5(rast,specpred[i])
   if (class(x1)!="try-error"){
     range <- range[range$ORIGIN %in% list(2,1),]
-    try(brtplot3(rast,spec,range))
-    try(brtplot3a(rast,spec,range))
-    try(brtplot4(rast,spec,range))
-    try(brtplot6(rast,spec,range))
-    try(brtplot4a(rast,spec,range))
-    try(brtplot6a(rast,spec,range))
+    try(brtplot3(rast,specpred[i],range))
+    try(brtplot3a(rast,specpred[i],range))
+    try(brtplot4(rast,specpred[i],range))
+    try(brtplot6(rast,specpred[i],range))
+    try(brtplot4a(rast,specpred[i],range))
+    try(brtplot6a(rast,specpred[i],range))
   }
   gc()
 }
@@ -362,7 +363,7 @@ for (i in 1:length(specpred)){
 #CAWA map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr12 <- subunits[subunits$BCRChar=="12",]
-rast <- raster(paste0(x,"CAWA_TSSRcorrected.tif"))
+rast <- raster(paste0(x,"WeightedMosaic_CAWA.tiff"))
 rast <- mask(rast,subr)
 x1<-try(range <- shapefile(paste0(natureserve,"CAWA.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
@@ -388,7 +389,7 @@ dev.off()
 #CONW map for manuscript
 bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr81 <- subunits[subunits$BCRChar=="8-1",]
-rast <- raster(paste0(x,"CONW_TSSRcorrected.tif"))
+rast <- raster(paste0(x,"WeightedMosaic_CONW.tiff"))
 rast <- mask(rast,subr)
 spec <- substr(models[1],1,4)
 x1<-try(range <- shapefile(paste0(natureserve,spec,"CONW.shp",sep="")))

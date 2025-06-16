@@ -1,3 +1,4 @@
+##### OBSOLETE #####
 library(raster)
 library(rgeos)
 library(dismo)
