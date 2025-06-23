@@ -32,7 +32,7 @@ p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
 l <- rgdal::readOGR("H:/Shared drives/GIS/hydrology/lakes_lcc.shp")
 bcr <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/BCRs/bcrfinallcc.shp")
 canada <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/canadaLCC.shp")
-natureserve <- "H:/Shared drives/GIS/NatureServe/Abbreviated/_lcc/"
+natureserve <- "H:/Shared drives/GIS/NatureServe/Abbreviated/"
 LCC <- CRS(projection(canada))
 #specpred <- list.dirs(w, full.names=FALSE)
 #specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
@@ -104,18 +104,29 @@ brtplotdens <- function (rast) {
   plot(canada,col=NA,border="black", lwd=1.5, add=TRUE)
   dev.off()
 }
-brtplotdens(sampcan)
+#brtplotdens(sampcan)
 
-#plot log abundance
+#plot total density
+setwd(x)
+models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[1]))
+rast <- raster(paste0(x,models[1]))
+totdens <- mask(rast,subr)
+for (i in 2:length(specpred)){
+  models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[i]))
+  rast <- raster(paste0(x,models[1]))
+  rast <- mask(rast,subr)
+  totdens <- totdens + rast
+}
+#writeRaster(totdens,filename=paste0(x,"_TotDens.tif"))
 
-#logabund <- raster("H:/Shared drives/BAM_NationalModels/NationalModels4.0/website/map-images/allspec_log_abund.tiff")
+#rast <- raster(paste0(x,"_TotDens.tif"))
 brtplotabund <- function (rast) {
   prev <- cellStats(rast, 'mean')	
   zmin <- cellStats(rast,'min')
   zmax <- cellStats(rast,'max')
   q99 <- quantile(rast, probs=c(0.99))
-  rast2 <- clamp(rast,6,q99)
-  png(file=paste0(x,"_logabund.png"), width=2600, height=1600, res=216)
+  rast2 <- clamp(rast,4,q99)
+  png(file=paste0(x,"_TotDens.png"), width=2600, height=1600, res=216)
   par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
   plot(bcrc, col=NA, border=NA, axes=FALSE)
   plot(bcr, col="white", border=NA, add=TRUE)
@@ -127,7 +138,7 @@ brtplotabund <- function (rast) {
   plot(canada,col=NA,border="black", lwd=1.5, add=TRUE)
   dev.off()
 }
-brtplotabund(logabund)
+brtplotabund(totdens)
 
 
 brtplot1 <- function (rast,spec) {
@@ -334,18 +345,19 @@ for (i in 1:length(specpred)){
   models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[i]))
   rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
-  x1<-try(range <- shapefile(paste(natureserve,specpred[i],".shp",sep="")))
+  x1<-try(range <- rgdal::readOGR(paste(natureserve,specpred[i],".shp",sep="")))
   brtplot1(rast,specpred[i])
   brtplot2(rast,specpred[i])
   brtplot5(rast,specpred[i])
   if (class(x1)!="try-error"){
-    range <- range[range$ORIGIN %in% list(2,1),]
-    try(brtplot3(rast,specpred[i],range))
-    try(brtplot3a(rast,specpred[i],range))
-    try(brtplot4(rast,specpred[i],range))
-    try(brtplot6(rast,specpred[i],range))
-    try(brtplot4a(rast,specpred[i],range))
-    try(brtplot6a(rast,specpred[i],range))
+    range1 <- spTransform(range,LCC)
+    range1 <- range1[range1$ORIGIN %in% list(2,1),]
+    try(brtplot3(rast,specpred[i],range1))
+    try(brtplot3a(rast,specpred[i],range1))
+    try(brtplot4(rast,specpred[i],range1))
+    try(brtplot6(rast,specpred[i],range1))
+    try(brtplot4a(rast,specpred[i],range1))
+    try(brtplot6a(rast,specpred[i],range1))
   }
   gc()
 }
