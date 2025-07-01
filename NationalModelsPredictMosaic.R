@@ -1,9 +1,9 @@
 library(raster)
-library(rgeos)
+#library(rgeos)
 library(dismo)
-library(rgdal)
+#library(rgdal)
 library(gbm)
-library(maptools)
+#library(maptools)
 library(dplyr)
 library(sf)
 library(Matrix)
@@ -13,7 +13,7 @@ library(terra)
 
 #w <-"F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/Feb2020/artifacts/"
 #x <- "F:/GoogleDrive/BAM.SharedDrive/RshProjs/PopnStatus/NationalModels/feb2020/website/map-images/"
-x <- "H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/NewMosaicApproach/"
+x <- "G:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/NewMosaicApproach/"
 
 #bluegreen.colors <- colorRampPalette(c("#FFF68F", "khaki1","#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=0.8)
 #bgtrunc <- colorRampPalette(c("#ADFF2F", "greenyellow", "#00CD00", "green3", "#48D1CC", "mediumturquoise", "#007FFF", "blue"), space="Lab", bias=10)
@@ -22,17 +22,17 @@ bgy <- sequential_hcl(10, "ag_GrnYl",rev=TRUE)
 #bgy2 <- colorRamp(bgy, bias=0.8)
 #blueyellow <- sequential_hcl(10, "BluYl",rev=TRUE)
 
-adjust <- read.csv("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/spatial-layers-TSSRspp/offset-adjustments-2025-04-04.csv")
+adjust <- read.csv("G:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/offset-adjustments-2025-04-04.csv")
 #specpred <- unique(adjust$spp)
-speclist <- read.csv("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/speclist.csv")
+speclist <- read.csv("G:/Shared drives/BAM_NationalModels4/NationalModels4.0/website/speclist.csv")
 speclist <- speclist[speclist$drop == 0,]
 specpred <- as.vector(speclist[,1])
 
-p<- rgdal::readOGR("H:/Shared drives/GIS/basemaps/province_state_line.shp")
-l <- rgdal::readOGR("H:/Shared drives/GIS/hydrology/lakes_lcc.shp")
-bcr <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/BCRs/bcrfinallcc.shp")
-canada <- rgdal::readOGR("H:/Shared drives/GIS/basemaps/canadaLCC.shp")
-natureserve <- "H:/Shared drives/GIS/NatureServe/Abbreviated/"
+p<- shapefile("G:/Shared drives/GIS/basemaps/province_state_line.shp")
+l <- shapefile("G:/Shared drives/GIS/hydrology/lakes_lcc.shp")
+bcr <- shapefile("G:/Shared drives/GIS/basemaps/BCRs/bcrfinallcc.shp")
+canada <- shapefile("G:/Shared drives/GIS/basemaps/canadaLCC.shp")
+natureserve <- "G:/Shared drives/GIS/NatureServe/Abbreviated/"
 LCC <- CRS(projection(canada))
 #specpred <- list.dirs(w, full.names=FALSE)
 #specpred <- list.files(x,pattern="_TSSRcorrected.tif$")
@@ -41,20 +41,19 @@ LCC <- CRS(projection(canada))
 #models <- list.files(paste0(x,specpred[2],"/"),pattern="Mean.tif$")
 #rast <- raster(paste0(w,specpred[2],"/",models[1]))
 
+subr<- raster("G:/Shared drives/BAM_NationalModels4/NationalModels4.0/BCRUnits/BCRSubunits.tif")
 models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[1]))
 rast <- raster(paste0(x,models[1]))
 rast <- mask(rast,subr)
 bcrc <- raster::crop(bcr,rast)
 
-subunits <- rgdal::readOGR("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
+subunits <- shapefile("G:/Shared drives/BAM_NationalModels4/NationalModels4.0/Feb2020/BCRSubunits/BCRSubunits.shp")
 #subr <- rasterize(subunits,rast)
-
-subr<- raster("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/BCRUnits/BCRSubunits.tif")
-
 
 #load("D:/BAM/BAMData/BAMdb-GNMsubset-2020-01-08.RData")
 
-load("H:/Shared drives/BAM_NationalModels4/NationalModels4.0/data/BAMData/BAM_data_package_November2019.RData")
+load("G:/Shared drives/BAM_NationalModels4/NationalModels4.0/data/BAMData/BAM_data_package_November2019.RData")
+LCC <- CRS(projection(canada))
 occur <- left_join(PCmatch,SScombo,by="SS")
 occur <- occur[occur$ABUND > 0,]
 occur <- na.omit(occur)
@@ -229,6 +228,32 @@ brtplot3a <- function (rast,spec,range) {
   dev.off()
 }
 
+#maps with points only
+brtplot3b <- function (rast,spec) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.005)
+  zmin <- min(zmin,0.05)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  occur <- left_join(PC1,SScombo,by="SS")
+  occur <- occur[occur$ABUND > 0,]
+  occur <- na.omit(occur)
+  occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+  occurcan <- occursp[canada,]
+  png(file=paste(x,spec,"_pred1km3b.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(p, col="black", add=TRUE)
+  points(occurcan[,7:8], col = "#0000007D", pch=20, cex=0.4)
+  dev.off()
+}
+
 brtplot4 <- function (rast,spec,range) {
   prev <- cellStats(rast, 'mean')	
   zmin <- max(prev,0.001)
@@ -273,6 +298,32 @@ brtplot4a <- function (rast,spec,range) {
   plot(l, col="light gray", border=NA,add=TRUE)
   plot(range, col=NA, border="dark blue", add=TRUE)
   plot(p, col="black", add=TRUE)
+  dev.off()
+}
+
+#maps with points only
+brtplot4b <- function (rast,spec) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- max(prev,0.001)
+  zmin <- min(zmin,0.01)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  occur <- left_join(PC1,SScombo,by="SS")
+  occur <- occur[occur$ABUND > 0,]
+  occur <- na.omit(occur)
+  occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+  occurcan <- occursp[canada,]
+  png(file=paste(x,spec,"_pred1km4b.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", maxpixels=5000000, zlim=c(0,zmin), axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(p, col="black", add=TRUE)
+  points(occurcan[,7:8], col = "#0000007D", pch=20, cex=0.4)
   dev.off()
 }
 
@@ -340,12 +391,37 @@ brtplot6a <- function (rast,spec,range) {
   dev.off()
 }
 
+#maps with points only
+brtplot6b <- function (rast,spec) {
+  prev <- cellStats(rast, 'mean')	
+  zmin <- min(prev,0.001)
+  zmax <- cellStats(rast, 'max')
+  q99 <- quantile(rast, probs=c(0.999))
+  PC1 <- PCmatch[PCmatch$SPECIES==spec,]
+  occur <- left_join(PC1,SScombo,by="SS")
+  occur <- occur[occur$ABUND > 0,]
+  occur <- na.omit(occur)
+  occursp <- SpatialPointsDataFrame(coords = occur[,7:8], data = occur, proj4string = LCC)
+  occurcan <- occursp[canada,]
+  png(file=paste(x,spec,"_pred1km6b.png",sep=""), width=2600, height=1600, res=216)
+  par(cex.main=1.8, mar=c(0,0,0,0), bg="light gray", bty="n")
+  plot(bcrc, col=NA, border=NA, axes=FALSE)
+  plot(bcr, col="white", border=NA, add=TRUE)
+  plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
+  plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
+  plot(l, col="light gray", border=NA,add=TRUE)
+  plot(p, col="black", add=TRUE)
+  points(occurcan[,7:8], col = "#0000007D", pch=20, cex=0.4)
+  dev.off()
+}
+
 setwd(x)
 for (i in 1:length(specpred)){
   models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[i]))
   rast <- raster(paste0(x,models[1]))
   rast <- mask(rast,subr)
-  x1<-try(range <- rgdal::readOGR(paste(natureserve,specpred[i],".shp",sep="")))
+  x1<-try(range <- shapefile(paste(natureserve,specpred[i],".shp",sep="")))
   brtplot1(rast,specpred[i])
   brtplot2(rast,specpred[i])
   brtplot5(rast,specpred[i])
@@ -360,6 +436,17 @@ for (i in 1:length(specpred)){
     try(brtplot6a(rast,specpred[i],range1))
   }
   gc()
+}
+gc()
+
+setwd(x)
+for (i in 1:length(specpred)){
+  models <- list.files(x,pattern=paste0("WeightedMosaic_",specpred[i]))
+  rast <- raster(paste0(x,models[1]))
+  rast <- mask(rast,subr)
+  try(brtplot3b(rast,specpred[i]))
+  try(brtplot4b(rast,specpred[i]))
+  try(brtplot6b(rast,specpred[i]))
 }
 gc()
 
@@ -379,6 +466,7 @@ rast <- raster(paste0(x,"WeightedMosaic_CAWA.tiff"))
 rast <- mask(rast,subr)
 x1<-try(range <- shapefile(paste0(natureserve,"CAWA.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
+range1 <- spTransform(range,LCC)
 prev <- cellStats(rast, 'mean')	
 zmin <- max(prev,0.005)
 zmin <- min(zmin,0.05)
@@ -392,7 +480,7 @@ plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=
 plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
 plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
 plot(l, col="light gray", border=NA,add=TRUE)
-plot(range, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
+plot(range1, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
 plot(p, col="black", add=TRUE)
 plot(bcr60, col=NA, border="red", lwd=2, add=TRUE)
 plot(bcr12, col=NA, border="red", lwd=2, add=TRUE)
@@ -403,9 +491,9 @@ bcr60 <- subunits[subunits$BCRChar=="6-0",]
 bcr81 <- subunits[subunits$BCRChar=="8-1",]
 rast <- raster(paste0(x,"WeightedMosaic_CONW.tiff"))
 rast <- mask(rast,subr)
-spec <- substr(models[1],1,4)
-x1<-try(range <- shapefile(paste0(natureserve,spec,"CONW.shp",sep="")))
+x1<-try(range <- shapefile(paste0(natureserve,"CONW.shp",sep="")))
 range <- range[range$ORIGIN %in% list(2,1),]
+range1 <- spTransform(range,LCC)
 prev <- cellStats(rast, 'mean')	
 zmin <- max(prev,0.005)
 zmin <- min(zmin,0.05)
@@ -419,7 +507,7 @@ plot(rast, col="#F9FFAF", zlim=c(0,zmin), maxpixels=5000000, axes=FALSE, legend=
 plot(rast, col=bgy, zlim=c(zmin,q99), maxpixels=5000000, axes=FALSE, add=TRUE, horizontal = TRUE, smallplot = c(0.70,0.90,0.90,0.95))
 plot(rast, col="#255668", zlim=c(q99,zmax), maxpixels=5000000, axes=FALSE, legend=FALSE, add=TRUE)
 plot(l, col="light gray", border=NA,add=TRUE)
-plot(range, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
+plot(range1, col=NA, border="#3366cc", lwd=1.5, add=TRUE)
 plot(p, col="black", add=TRUE)
 plot(bcr60, col=NA, border="red", lwd=2, add=TRUE)
 plot(bcr81, col=NA, border="red", lwd=2, add=TRUE)
